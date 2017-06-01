@@ -32,7 +32,206 @@ system.time({
                          ## DEFAULT: activation = "Rectifier", hidden = c(200,200), 
                          epochs = 100, stopping_rounds = 2, stopping_metric = "AUC", stopping_tolerance = 0) 
 })
-h2o.performance(md1, dx_test)@metrics$AUC
+auc1 <- h2o.performance(md1, dx_test)@metrics$AUC
+auc1
+
+#(b.)
+system.time({
+  md2 <- h2o.deeplearning(x = Xnames, y = "y", training_frame = dx_train, validation_frame = dx_valid,
+                         activation = "Rectifier", hidden = c(50,50,50,50), input_dropout_ratio = 0.2,
+                         epochs = 100, stopping_rounds = 2, stopping_metric = "AUC", stopping_tolerance = 0) 
+})
+auc2 <- h2o.performance(md2, dx_test)@metrics$AUC
+auc2
+
+#(c.)
+system.time({
+  md3 <- h2o.deeplearning(x = Xnames, y = "y", training_frame = dx_train, validation_frame = dx_valid,
+                         activation = "Rectifier", hidden = c(50,50,50,50), 
+                         epochs = 100, stopping_rounds = 2, stopping_metric = "AUC", stopping_tolerance = 0) 
+})
+auc3 <- h2o.performance(md3, dx_test)@metrics$AUC
+auc3
+
+#(d.)
+system.time({
+  md4 <- h2o.deeplearning(x = Xnames, y = "y", training_frame = dx_train, validation_frame = dx_valid,
+                         activation = "Rectifier", hidden = c(20,20),
+                         epochs = 100, stopping_rounds = 2, stopping_metric = "AUC", stopping_tolerance = 0) 
+})
+auc4 <- h2o.performance(md4, dx_test)@metrics$AUC
+auc4
+
+#(e.)
+system.time({
+  md5 <- h2o.deeplearning(x = Xnames, y = "y", training_frame = dx_train, validation_frame = dx_valid,
+                         activation = "Rectifier", hidden = c(20),
+                         epochs = 100, stopping_rounds = 2, stopping_metric = "AUC", stopping_tolerance = 0) 
+})
+auc5 <- h2o.performance(md5, dx_test)@metrics$AUC
+auc5
+
+#(f.)
+system.time({
+  md6 <- h2o.deeplearning(x = Xnames, y = "y", training_frame = dx_train, validation_frame = dx_valid,
+                         activation = "Rectifier", hidden = c(5),
+                         epochs = 100, stopping_rounds = 2, stopping_metric = "AUC", stopping_tolerance = 0) 
+})
+auc6 <- h2o.performance(md6, dx_test)@metrics$AUC
+auc6
+
+#(g.)
+system.time({
+  md7 <- h2o.deeplearning(x = Xnames, y = "y", training_frame = dx_train, validation_frame = dx_valid,
+                         activation = "Rectifier", hidden = c(1),
+                         epochs = 100, stopping_rounds = 2, stopping_metric = "AUC", stopping_tolerance = 0) 
+})
+auc7 <- h2o.performance(md7, dx_test)@metrics$AUC
+auc7
+
+#(h.)
+system.time({
+  md8 <- h2o.deeplearning(x = Xnames, y = "y", training_frame = dx_train, validation_frame = dx_valid,
+                         activation = "Rectifier", hidden = c(200,200), l1 = 1e-5, l2 = 1e-5, 
+                         epochs = 100, stopping_rounds = 2, stopping_metric = "AUC", stopping_tolerance = 0) 
+})
+auc8 <- h2o.performance(md8, dx_test)@metrics$AUC
+auc8
+
+#(i.)
+system.time({
+  md9 <- h2o.deeplearning(x = Xnames, y = "y", training_frame = dx_train, validation_frame = dx_valid,
+                         activation = "RectifierWithDropout", hidden = c(200,200,200,200), hidden_dropout_ratios=c(0.2,0.1,0.1,0),
+                         epochs = 100, stopping_rounds = 2, stopping_metric = "AUC", stopping_tolerance = 0) 
+})
+auc9 <- h2o.performance(md9, dx_test)@metrics$AUC
+auc9
+
+#(j.)
+system.time({
+  md10 <- h2o.deeplearning(x = Xnames, y = "y", training_frame = dx_train, validation_frame = dx_valid,
+                         activation = "Rectifier", hidden = c(200,200), 
+                         rho = 0.95, epsilon = 1e-06,  ## default:  rho = 0.99, epsilon = 1e-08
+                         epochs = 100, stopping_rounds = 2, stopping_metric = "AUC", stopping_tolerance = 0) 
+})
+auc10 <- h2o.performance(md10, dx_test)@metrics$AUC
+auc10
+
+#(k.)
+system.time({
+  md11 <- h2o.deeplearning(x = Xnames, y = "y", training_frame = dx_train, validation_frame = dx_valid,
+                         activation = "Rectifier", hidden = c(200,200), 
+                         rho = 0.999, epsilon = 1e-08,  ## default:  rho = 0.99, epsilon = 1e-08
+                         epochs = 100, stopping_rounds = 2, stopping_metric = "AUC", stopping_tolerance = 0) 
+})
+auc11 <- h2o.performance(md11, dx_test)@metrics$AUC
+auc11
+
+#(l.)
+system.time({
+  md12 <- h2o.deeplearning(x = Xnames, y = "y", training_frame = dx_train, validation_frame = dx_valid,
+                         activation = "Rectifier", hidden = c(200,200), 
+                         rho = 0.9999, epsilon = 1e-08,  ## default:  rho = 0.99, epsilon = 1e-08
+                         epochs = 100, stopping_rounds = 2, stopping_metric = "AUC", stopping_tolerance = 0) 
+})
+auc12 <- h2o.performance(md12, dx_test)@metrics$AUC
+auc12
+
+#(m.)
+system.time({
+  md13 <- h2o.deeplearning(x = Xnames, y = "y", training_frame = dx_train, validation_frame = dx_valid,
+                         activation = "Rectifier", hidden = c(200,200), 
+                         rho = 0.999, epsilon = 1e-06,  ## default:  rho = 0.99, epsilon = 1e-08
+                         epochs = 100, stopping_rounds = 2, stopping_metric = "AUC", stopping_tolerance = 0) 
+})
+auc13 <- h2o.performance(md13, dx_test)@metrics$AUC
+auc13
+
+#(n.)
+system.time({
+  md14 <- h2o.deeplearning(x = Xnames, y = "y", training_frame = dx_train, validation_frame = dx_valid,
+                         activation = "Rectifier", hidden = c(200,200), 
+                         rho = 0.999, epsilon = 1e-09,  ## default:  rho = 0.99, epsilon = 1e-08
+                         epochs = 100, stopping_rounds = 2, stopping_metric = "AUC", stopping_tolerance = 0) 
+})
+auc14 <- h2o.performance(md14, dx_test)@metrics$AUC
+auc14
+
+#(o.)
+system.time({
+  md15 <- h2o.deeplearning(x = Xnames, y = "y", training_frame = dx_train, validation_frame = dx_valid,
+                         activation = "Rectifier", hidden = c(200,200), 
+                         adaptive_rate = FALSE, ## default: rate = 0.005, rate_decay = 1, momentum_stable = 0,
+                         epochs = 100, stopping_rounds = 2, stopping_metric = "AUC", stopping_tolerance = 0) 
+})
+auc15 <- h2o.performance(md15, dx_test)@metrics$AUC
+auc15 
+
+#(p.)
+system.time({
+  md16 <- h2o.deeplearning(x = Xnames, y = "y", training_frame = dx_train, validation_frame = dx_valid,
+                         activation = "Rectifier", hidden = c(200,200), 
+                         adaptive_rate = FALSE, rate = 0.001, momentum_start = 0.5, momentum_ramp = 1e5, momentum_stable = 0.99,
+                         epochs = 100, stopping_rounds = 2, stopping_metric = "AUC", stopping_tolerance = 0) 
+})
+auc16 <- h2o.performance(md16, dx_test)@metrics$AUC
+auc16 
+
+#(q.)
+system.time({
+  md17 <- h2o.deeplearning(x = Xnames, y = "y", training_frame = dx_train, validation_frame = dx_valid,
+                         activation = "Rectifier", hidden = c(200,200), 
+                         adaptive_rate = FALSE, rate = 0.01, momentum_start = 0.5, momentum_ramp = 1e5, momentum_stable = 0.99,
+                         epochs = 100, stopping_rounds = 2, stopping_metric = "AUC", stopping_tolerance = 0) 
+})
+auc17 <- h2o.performance(md17, dx_test)@metrics$AUC
+auc17
+
+#(r.)
+system.time({
+  md18 <- h2o.deeplearning(x = Xnames, y = "y", training_frame = dx_train, validation_frame = dx_valid,
+                         activation = "Rectifier", hidden = c(200,200), 
+                         adaptive_rate = FALSE, rate = 0.01, rate_annealing = 1e-05, 
+                         momentum_start = 0.5, momentum_ramp = 1e5, momentum_stable = 0.99,
+                         epochs = 100, stopping_rounds = 2, stopping_metric = "AUC", stopping_tolerance = 0) 
+})
+auc18 <- h2o.performance(md18, dx_test)@metrics$AUC
+auc18
+
+#(s.)
+system.time({
+  md19 <- h2o.deeplearning(x = Xnames, y = "y", training_frame = dx_train, validation_frame = dx_valid,
+                         activation = "Rectifier", hidden = c(200,200), 
+                         adaptive_rate = FALSE, rate = 0.01, rate_annealing = 1e-04, 
+                         momentum_start = 0.5, momentum_ramp = 1e5, momentum_stable = 0.99,
+                         epochs = 100, stopping_rounds = 2, stopping_metric = "AUC", stopping_tolerance = 0) 
+})
+auc19 <- h2o.performance(md19, dx_test)@metrics$AUC
+auc19
+
+#(t.)
+system.time({
+  md20 <- h2o.deeplearning(x = Xnames, y = "y", training_frame = dx_train, validation_frame = dx_valid,
+                         activation = "Rectifier", hidden = c(200,200), 
+                         adaptive_rate = FALSE, rate = 0.01, rate_annealing = 1e-05, 
+                         momentum_start = 0.5, momentum_ramp = 1e5, momentum_stable = 0.9,
+                         epochs = 100, stopping_rounds = 2, stopping_metric = "AUC", stopping_tolerance = 0) 
+})
+auc20 <- h2o.performance(md20, dx_test)@metrics$AUC
+auc20
+
+#(u.)
+system.time({
+  md21 <- h2o.deeplearning(x = Xnames, y = "y", training_frame = dx_train, validation_frame = dx_valid,
+                         activation = "Rectifier", hidden = c(200,200), 
+                         adaptive_rate = FALSE, rate = 0.01, rate_annealing = 1e-05, 
+                         momentum_start = 0.5, momentum_ramp = 1e4, momentum_stable = 0.9,
+                         epochs = 100, stopping_rounds = 2, stopping_metric = "AUC", stopping_tolerance = 0) 
+})
+auc21 <- h2o.performance(md21, dx_test)@metrics$AUC
+auc21
+
+
 
 #############Don't run
 ###3. Method - Random Search (with algorithm "GBM")
@@ -64,7 +263,7 @@ search_criteria <- list( strategy = "RandomDiscrete",
 )
 
 system.time({
-  mds <- h2o.grid(algorithm = "gbm", grid_id = "grd",
+  md22 <- h2o.grid(algorithm = "gbm", grid_id = "grd",
                   x = Xnames, y = "y", training_frame = dx_train,
                   validation_frame = dx_valid,
                   hyper_params = hyper_params,
@@ -73,19 +272,19 @@ system.time({
                   seed = 123)
 })
 
-mds_sort <- h2o.getGrid(grid_id = "grd", sort_by = "auc", decreasing = TRUE)
-mds_sort
+md22_sort <- h2o.getGrid(grid_id = "grd", sort_by = "auc", decreasing = TRUE)
+md22_sort
 
-md_best <- h2o.getModel(mds_sort@model_ids[[1]])
-summary(md_best)
+md22_best <- h2o.getModel(md22_sort@model_ids[[1]])
+summary(md22_best)
 
-h2o.auc(h2o.performance(md_best, dx_test))
+auc22 <- h2o.auc(h2o.performance(md22_best, dx_test))
+auc22
 
 
 #4. Method - Ensemble
 library(h2o)
 h2o.init(nthreads=-1)
-
 
 dx <- h2o.importFile("test.csv")
 dx_split <- h2o.splitFrame(dx, ratios = 0.7, seed = 123)
@@ -95,7 +294,7 @@ Xnames <- setdiff(names(dx_train),"y")
 
 
 system.time({
-  md1 <- h2o.glm(x = Xnames, y = "y", training_frame = dx_train, 
+  md23 <- h2o.glm(x = Xnames, y = "y", training_frame = dx_train, 
                  family = "binomial", 
                  alpha = 1, lambda = 0,
                  seed = 123,
@@ -103,7 +302,7 @@ system.time({
 })
 
 system.time({
-  md2 <- h2o.randomForest(x = Xnames, y = "y", training_frame = dx_train, 
+  md24 <- h2o.randomForest(x = Xnames, y = "y", training_frame = dx_train, 
                           ntrees = 300,
                           seed = 123,
                           nfolds = 5, fold_assignment = "Modulo", keep_cross_validation_predictions = TRUE)
@@ -111,14 +310,14 @@ system.time({
 
 
 system.time({
-  md3 <- h2o.gbm(x = Xnames, y = "y", training_frame = dx_train, distribution = "bernoulli", 
+  md25 <- h2o.gbm(x = Xnames, y = "y", training_frame = dx_train, distribution = "bernoulli", 
                  ntrees = 200, max_depth = 10, learn_rate = 0.1, 
                  nbins = 100, seed = 123,
                  nfolds = 5, fold_assignment = "Modulo", keep_cross_validation_predictions = TRUE)    
 })
 
 system.time({
-  md4 <- h2o.deeplearning(x = Xnames, y = "y", training_frame = dx_train, 
+  md26 <- h2o.deeplearning(x = Xnames, y = "y", training_frame = dx_train, 
                           epochs = 5,
                           seed = 123,
                           nfolds = 5, fold_assignment = "Modulo", keep_cross_validation_predictions = TRUE) 
@@ -126,18 +325,19 @@ system.time({
 
 
 
-md_ens <- h2o.stackedEnsemble(x = Xnames, y = "y", training_frame = dx_train, 
-                              base_models = list(md1@model_id, md2@model_id, md3@model_id, md4@model_id))
+md_ensemble <- h2o.stackedEnsemble(x = Xnames, y = "y", training_frame = dx_train, 
+                              base_models = list(md23@model_id, md24@model_id, md25@model_id, md26@model_id))
 
 
-h2o.auc(h2o.performance(md1, dx_test))
-h2o.auc(h2o.performance(md2, dx_test))
-h2o.auc(h2o.performance(md3, dx_test))
-h2o.auc(h2o.performance(md4, dx_test))
-h2o.auc(h2o.performance(md_ens, dx_test))
+h2o.auc(h2o.performance(md23, dx_test))
+h2o.auc(h2o.performance(md24, dx_test))
+h2o.auc(h2o.performance(md25, dx_test))
+h2o.auc(h2o.performance(md26, dx_test))
+h2o.auc(h2o.performance(md_ensemble, dx_test))
 
 
-h2o.getModel(md_ens@model$metalearner$name)@model$coefficients_table
+auc_ensemble <- h2o.getModel(md_ensemble@model$metalearner$name)@model$coefficients_table
+
 
 ##HW3
 ###2. Method - Logistic Regression
