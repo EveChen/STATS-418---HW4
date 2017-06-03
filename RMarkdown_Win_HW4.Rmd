@@ -78,7 +78,7 @@ rm(list=ls())
 gc(reset=TRUE)
 
 #Set Working Directory
-setwd("C:/Users/Eve/Dropbox/UCLA Files/Courses/418 Tools of Data Science/HW4")
+setwd("C:/Users/Eve/Dropbox/UCLA Files/Courses/418 Tools of Data Science/STATS 418 - HW4")
 ```
 
 Step2: Load Packages
@@ -243,90 +243,73 @@ auc6
 
 ***
 
-####2. Using XGBoost package
+#####2. Random Search (with algorithm "GBM")
 
-Step1: Load our data set 
+Step1: Split data into train, validation and test data sets
 ```{r, message = F}
-d <- read_csv("bank.csv")
+dx <- h2o.importFile("test.csv")
+dx_split <- h2o.splitFrame(dx, ratios = c(0.6,0.2), seed = 123)
+dx_train <- dx_split[[1]]
+dx_valid <- dx_split[[2]]
+dx_test <- dx_split[[3]]
+Xnames <- names(dx_train)[which(names(dx_train)!="y")]
 ```
 
-Step2: Shuffle our data and split into training and test data set
+Step2: Create list of hyperparameters
 
 ```{r}
-set.seed(123)
-N <- nrow(d)
-idx <- sample(1:N, 0.6*N)
-d_train <- d[idx,]
-d_test <- d[-idx,]
+hyper_params <- list( ntrees = 10000,  ## early stopping
+                      max_depth = 5:15, 
+                      min_rows = c(1,3,10,30,100),
+                      learn_rate = c(0.01,0.03,0.1),  
+                      learn_rate_annealing = c(0.99,0.995,1,1),
+                      sample_rate = c(0.4,0.7,1,1),
+                      col_sample_rate = c(0.7,1,1),
+                      nbins = c(30,100,300),
+                      nbins_cats = c(64,256,1024)
+)
 ```
 
-Step3: Sparse our original data to make categorical features become numeric features
+Step3: Create list of search criteria
+
 ```{r}
-X <- Matrix::sparse.model.matrix(y ~ . - 1, data = d)
-X_train <- X[idx,]
-X_test <- X[-idx,]
+search_criteria <- list( strategy = "RandomDiscrete",
+                         max_runtime_secs = 10*3600,
+                         max_models = 100
+)
 ```
 
-Step4: Apply random forest model 
+Step4: Apply random search with GBM model 
 ```{r}
-#Build 100 trees
 system.time({
-  n_proc <- parallel::detectCores()
-  md_xgboost1 <- xgboost(data = X_train, label = ifelse(d_train$y=='Y',1,0),
-                nthread = n_proc, nround = 1, max_depth = 20,
-                num_parallel_tree = 100, subsample = 0.632,
-                colsample_bytree = 1/sqrt(length(X_train@x)/nrow(X_train)),
-                save_period = NULL)
+  md7 <- h2o.grid(algorithm = "gbm", grid_id = "grd",
+                  x = Xnames, y = "y", training_frame = dx_train,
+                  validation_frame = dx_valid,
+                  hyper_params = hyper_params,
+                  search_criteria = search_criteria,
+                  stopping_metric = "AUC", stopping_tolerance = 1e-3, stopping_rounds = 2,
+                  seed = 123)
 })
 ```
 
-```{r}
-#Build 200 trees
-system.time({
-  n_proc <- parallel::detectCores()
-  md_xgboost2 <- xgboost(data = X_train, label = ifelse(d_train$y=='Y',1,0),
-                nthread = n_proc, nround = 1, max_depth = 20,
-                num_parallel_tree = 200, subsample = 0.632,
-                colsample_bytree = 1/sqrt(length(X_train@x)/nrow(X_train)),
-                save_period = NULL)
-})
-```
-
-```{r}
-#Build 300 trees
-system.time({
-  n_proc <- parallel::detectCores()
-  md_xgboost3 <- xgboost(data = X_train, label = ifelse(d_train$y=='Y',1,0),
-                nthread = n_proc, nround = 1, max_depth = 20,
-                num_parallel_tree = 300, subsample = 0.632,
-                colsample_bytree = 1/sqrt(length(X_train@x)/nrow(X_train)),
-                save_period = NULL)
-})
-```
 
 Step5: Make prediction and calculate AUC
 ```{r}
-#AUC for 100 trees
-phat_xgboost1 <- predict(md_xgboost1, newdata = X_test)
-rocr_pred_xgboost1 <- prediction(phat_xgboost1, d_test$y)
-AUC_xgboost1 <- performance(rocr_pred_xgboost1, "auc")@y.values[[1]]
-AUC_xgboost1
+#To sort
+md7_sort <- h2o.getGrid(grid_id = "grd", sort_by = "auc", decreasing = TRUE)
+md7_sort
 ```
 
 ```{r}
-#AUC for 200 trees
-phat_xgboost2 <- predict(md_xgboost2, newdata = X_test)
-rocr_pred_xgboost2 <- prediction(phat_xgboost2, d_test$y)
-AUC_xgboost2 <- performance(rocr_pred_xgboost2, "auc")@y.values[[1]]
-AUC_xgboost2
+#To see the best
+md7_best <- h2o.getModel(md7_sort@model_ids[[1]])
+summary(md7_best)
 ```
 
 ```{r}
-#AUC for 300 trees
-phat_xgboost3 <- predict(md_xgboost3, newdata = X_test)
-rocr_pred_xgboost3 <- prediction(phat_xgboost3, d_test$y)
-AUC_xgboost3 <- performance(rocr_pred_xgboost3, "auc")@y.values[[1]]
-AUC_xgboost3
+#AUC 
+auc7 <- h2o.auc(h2o.performance(md7_best, dx_test))
+auc7
 ```
 
 
@@ -334,64 +317,86 @@ AUC_xgboost3
 ***
 
 
-####3. Using randomForest package
+####3. Using Ensemble
 
-Step1: Load our data set 
+Step1: split our data set 
 ```{r, message = F}
-dat <- read.csv("bank.csv")
-dat$y <- as.factor(dat$y)
+dx <- h2o.importFile("test.csv")
+dx_split <- h2o.splitFrame(dx, ratios = 0.7, seed = 123)
+dx_train <- dx_split[[1]]
+dx_test <- dx_split[[2]]
+Xnames <- setdiff(names(dx_train),"y")
 ```
 
-Step2: Split our data into training and test data set
+Step2: Create several models
 
 ```{r}
-train_sample = sample(nrow(dat), size = nrow(dat)*0.6)
-train_dat = dat[train_sample,]
-test_dat = dat[-train_sample,]
-```
-
-
-Step3: Apply random forest model 
-```{r}
-#Build 100 trees
+#Logistic Regression model
 system.time({
-  md_rf1 <- randomForest(y=train_dat$y, x = train_dat[, -ncol(train_dat)],
-                  ytest = test_dat$y, xtest = test_dat[, -ncol(test_dat)],
-                  ntree = 100, mtry = 3, keep.forest = TRUE)
-
+  md_logistic <- h2o.glm(x = Xnames, y = "y", training_frame = dx_train, 
+                 family = "binomial", 
+                 alpha = 1, lambda = 0,
+                 seed = 123,
+                 nfolds = 5, fold_assignment = "Modulo", keep_cross_validation_predictions = TRUE)
 })
-md_rf1
 ```
 
 ```{r}
-#Build 200 trees
+#Random Forest model
 system.time({
-  md_rf2 <- randomForest(y=train_dat$y, x = train_dat[, -ncol(train_dat)],
-                  ytest = test_dat$y, xtest = test_dat[, -ncol(test_dat)],
-                  ntree = 200, mtry = 3, keep.forest = TRUE)
-
+  md_randomforest <- h2o.randomForest(x = Xnames, y = "y", training_frame = dx_train, ntrees = 300, seed = 123, nfolds = 5, fold_assignment = "Modulo", keep_cross_validation_predictions = TRUE)
 })
-md_rf2
 ```
 
 ```{r}
-#Build 300 trees
+#GBM model
 system.time({
-  md_rf3 <- randomForest(y=train_dat$y, x = train_dat[, -ncol(train_dat)],
-                  ytest = test_dat$y, xtest = test_dat[, -ncol(test_dat)],
-                  ntree = 300, mtry = 3, keep.forest = TRUE)
-
+  md_gbm <- h2o.gbm(x = Xnames, y = "y", training_frame = dx_train, distribution = "bernoulli", ntrees = 200, max_depth = 10, learn_rate = 0.1,  nbins = 100, seed = 123, nfolds = 5, fold_assignment = "Modulo", keep_cross_validation_predictions = TRUE)    
 })
-md_rf3
+```
+
+```{r}
+#Neural network model
+system.time({
+  md_neuralnetwork <- h2o.deeplearning(x = Xnames, y = "y", training_frame = dx_train,  epochs = 5, seed = 123, nfolds = 5, fold_assignment = "Modulo", keep_cross_validation_predictions = TRUE) 
+})
 ```
 
 
-
-Step4: Check variable importance (optional)
+Step3: Build our ensemble model with the above four models 
 ```{r}
-varImpPlot(md_rf1,type=2)
+system.time({
+  md_ensemble <- h2o.stackedEnsemble(x = Xnames, y = "y", training_frame = dx_train,base_models = list(md23@model_id, md24@model_id, md25@model_id, md26@model_id))
+})
+```
+
+Step4: Check AUC for all the models
+```{r}
+h2o.auc(h2o.performance(md_logistic, dx_test))
 ``` 
-We may also see that the feature "duration"is the most important one. Therefore, while we're considering which features to be applied to our random forest model, we can firstly build a basic random forest model. Then, **varImpPlot** function can help us identify which features have greater influence to our model. This step can help optimize the model.
+
+```{r}
+h2o.auc(h2o.performance(md_randomforest, dx_test))
+``` 
+
+```{r}
+h2o.auc(h2o.performance(md_gbm, dx_test))
+``` 
+
+```{r}
+h2o.auc(h2o.performance(md_neuralnetwork, dx_test))
+``` 
+
+```{r}
+h2o.auc(h2o.performance(md_ensemble, dx_test))
+``` 
+
+Step5: Get coefficients of our ensemble model
+```{r}
+auc_ensemble <- h2o.getModel(md_ensemble@model$metalearner$name)@model$coefficients_table
+```
+
+
 
 ***
 

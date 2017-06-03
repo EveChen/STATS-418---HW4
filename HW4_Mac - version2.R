@@ -337,7 +337,7 @@ h2o.auc(h2o.performance(md_ensemble, dx_test))
 
 
 auc_ensemble <- h2o.getModel(md_ensemble@model$metalearner$name)@model$coefficients_table
-
+s
 
 ##HW3
 ###2. Method - Logistic Regression
