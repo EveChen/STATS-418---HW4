@@ -1,0 +1,379 @@
+---
+title: "STATS 418 Homework 4"
+author: "Yuan Yi Chen (Eve)"
+date: "2017/6/3"
+output:
+  html_document: default
+  pdf_document: default
+  word_document: default
+---
+
+```{r, include = F}
+setwd("C:/Users/Eve/Dropbox/UCLA Files/Courses/418 Tools of Data Science/STATS 418 - HW4")
+```
+#**Agenda**
+
+###**A. Brief introduction of What I learn this week**
+  * ####Before this Week: 
+    + Know how to use **glm**, **glmnet** and **h20** functions to run logistic regression
+    + Know in what circumstance should I apply logistic regression model
+  * ####After this Week:
+    + Know how to use **randomForest package**, **h20 package** and **XGBoost package** functions to run logistic regression
+    + Know in what circumstance should I apply random forest model
+  * ####Plan for Next Week:
+    + Study Basic Neural Network
+    + Apply Neural Network to MNist data set with **h2o package** and **Tensorflow**
+    
+###**B. Random Forest Codes: Using R, H2O and XGBoost packages**
+  * ####R - h2o package
+  * ####R - XGBoost package
+  * ####R - randomForest package
+  
+
+***
+
+###A. Brief introduction of What I learn this week
+
+#####Random forest is a popular method to solve different kinds of machine learning tasks. Due to it's high accuracy, it seems to me that it's more prone to a predictive model instead of a description model. Basically, random forest does two things:
+  * Randomly choose different features to build different trees
+  * Calculate the average value of all the trees it created previously
+
+#####After we apply random forest model to the test data set, We usually can build up confusion matrix, AUC, ROC curve and variable importance to see how does our model perform. Also, there is no limitation about how many trees that we can build. The only concern is the computability of our desktop. That is, random forest seldom overfits in our training set.(Usually, an overfitting will happen if we have only few features to train.) 
+
+#####The general steps are
+  * Manipulate our data set (attention to features which are factors)
+  * Train the random forest model
+  * Predict a test data set
+  * View the accuracy, confusion matrix, variable importance
+  * Rebuild the random forest model based on the fourth step
+  * Predict our test data set again
+  * Check the accuracy, confusion matrix, partial dependence
+  * Apply other methods to double check if they all come to the same conclusion
+  
+***
+
+#####Here are some pros and cons that I saw from the textbook and Quora
+Random Forest Model |          
+----|-----------------------------------------------------------
+**Pros**|
+    | 1. Fast to train our training data
+    | 2. High accuracy
+    | 3. Automatically Generalized our data within the process
+**Cons**| 
+    | 1. Inconsistent - because it's classification method
+    | 2. Hard to interpret the results
+    | 3. Slow to predict our testing data
+    | 4. Need high computability, which may be expensive
+    
+***
+
+###B. Set up a working environment
+
+Step1: Setup
+```{r, include = F}
+#Remove Objects
+rm(list=ls())
+
+#Clear Memory
+gc(reset=TRUE)
+
+#Set Working Directory
+setwd("C:/Users/Eve/Dropbox/UCLA Files/Courses/418 Tools of Data Science/HW4")
+```
+
+Step2: Load Packages
+```{r, message = F}
+library(readr)   #Use to read data
+library(glmnet)  #Use to apply logistic regression
+library(ROCR)    #Use to calcuate AUC
+library(h2o)     #Use to run logistic regression and random forest 
+library(xgboost) #Use to run random forest model
+```
+
+Step3: Load data set
+This **bank marketing** data set is provided by a Portuguese banking institution. It takes records on every phone calls they make to promote their product - term deposit. Our goal is to predict if a customer will subsribe a product after they make phone calls.
+
+```{r}
+dat <- read.csv("test.csv")
+str(dat)
+```
+
+We totally have 45211 observations, 15 input variables and 1 output variables (y).
+
+```{r}
+head(dat, 3)
+```
+
+
+
+***
+
+###B. Apply models
+  * Using Neural Networks
+  * Using random search (GBM algorithm)
+  * Using ensemble
+  * Using Logistic Regression
+  * Using random forest
+  * Using GBM model
+
+***
+
+#####1. Using Neural Networks
+  * Layers (100, 100) with early stopping
+  * More layers (100, 100, 100, 100) with early stopping
+  * 
+
+#####(a.) Layers (100, 100) with early stopping
+
+Step1: Initiate h2o package
+```{r, message = F}
+library(h2o)
+```
+```{r}
+h2o.no_progress()
+```
+
+```{r, message = F}
+h2o.init(nthreads=-1)
+```
+
+Step2: Load data & split it into dx_train, dx_valid and dx_test data sets
+```{r}
+dx <- h2o.importFile("test.csv")
+dx_split <- h2o.splitFrame(dx, ratios = c(0.6,0.2), seed = 123)
+dx_train <- dx_split[[1]]
+dx_valid <- dx_split[[2]]
+dx_test <- dx_split[[3]]
+```
+Step3: Build model1
+```{r}
+Xnames <- names(dx_train)[which(names(dx_train)!="y")]
+system.time({
+  md1 <- h2o.deeplearning(x = Xnames, y = "y", training_frame = dx_train, validation_frame = dx_valid,hidden = c(100,100), epochs = 100, stopping_rounds = 2, stopping_metric = "AUC", stopping_tolerance = 0) 
+})
+```
+
+Step4: Make prediction & AUC
+```{r}
+auc1 <- h2o.performance(md1, dx_test)@metrics$AUC
+auc1
+```
+
+#####(b.) Layers (100, 100, 100, 100) with early stopping
+
+Step1: Build model1
+```{r}
+system.time({
+  md2 <- h2o.deeplearning(x = Xnames, y = "y", training_frame = dx_train, validation_frame = dx_valid,
+                         activation = "Rectifier", hidden = c(100,100,100,100), 
+                         epochs = 100, stopping_rounds = 2, stopping_metric = "AUC", stopping_tolerance = 0) 
+})
+```
+
+Step2: Make prediction & AUC
+```{r}
+auc2 <- h2o.performance(md2, dx_test)@metrics$AUC
+auc2
+```
+
+
+#####(b.) Layers (100, 100, 100, 100) with early stopping
+
+Step1: Build model1
+```{r}
+system.time({
+  md2 <- h2o.deeplearning(x = Xnames, y = "y", training_frame = dx_train, validation_frame = dx_valid,
+                         activation = "Rectifier", hidden = c(100,100,100,100), 
+                         epochs = 100, stopping_rounds = 2, stopping_metric = "AUC", stopping_tolerance = 0) 
+})
+```
+
+Step2: Make prediction & AUC
+```{r}
+auc2 <- h2o.performance(md2, dx_test)@metrics$AUC
+auc2
+```
+
+***
+
+####2. Using XGBoost package
+
+Step1: Load our data set 
+```{r, message = F}
+d <- read_csv("bank.csv")
+```
+
+Step2: Shuffle our data and split into training and test data set
+
+```{r}
+set.seed(123)
+N <- nrow(d)
+idx <- sample(1:N, 0.6*N)
+d_train <- d[idx,]
+d_test <- d[-idx,]
+```
+
+Step3: Sparse our original data to make categorical features become numeric features
+```{r}
+X <- Matrix::sparse.model.matrix(y ~ . - 1, data = d)
+X_train <- X[idx,]
+X_test <- X[-idx,]
+```
+
+Step4: Apply random forest model 
+```{r}
+#Build 100 trees
+system.time({
+  n_proc <- parallel::detectCores()
+  md_xgboost1 <- xgboost(data = X_train, label = ifelse(d_train$y=='Y',1,0),
+                nthread = n_proc, nround = 1, max_depth = 20,
+                num_parallel_tree = 100, subsample = 0.632,
+                colsample_bytree = 1/sqrt(length(X_train@x)/nrow(X_train)),
+                save_period = NULL)
+})
+```
+
+```{r}
+#Build 200 trees
+system.time({
+  n_proc <- parallel::detectCores()
+  md_xgboost2 <- xgboost(data = X_train, label = ifelse(d_train$y=='Y',1,0),
+                nthread = n_proc, nround = 1, max_depth = 20,
+                num_parallel_tree = 200, subsample = 0.632,
+                colsample_bytree = 1/sqrt(length(X_train@x)/nrow(X_train)),
+                save_period = NULL)
+})
+```
+
+```{r}
+#Build 300 trees
+system.time({
+  n_proc <- parallel::detectCores()
+  md_xgboost3 <- xgboost(data = X_train, label = ifelse(d_train$y=='Y',1,0),
+                nthread = n_proc, nround = 1, max_depth = 20,
+                num_parallel_tree = 300, subsample = 0.632,
+                colsample_bytree = 1/sqrt(length(X_train@x)/nrow(X_train)),
+                save_period = NULL)
+})
+```
+
+Step5: Make prediction and calculate AUC
+```{r}
+#AUC for 100 trees
+phat_xgboost1 <- predict(md_xgboost1, newdata = X_test)
+rocr_pred_xgboost1 <- prediction(phat_xgboost1, d_test$y)
+AUC_xgboost1 <- performance(rocr_pred_xgboost1, "auc")@y.values[[1]]
+AUC_xgboost1
+```
+
+```{r}
+#AUC for 200 trees
+phat_xgboost2 <- predict(md_xgboost2, newdata = X_test)
+rocr_pred_xgboost2 <- prediction(phat_xgboost2, d_test$y)
+AUC_xgboost2 <- performance(rocr_pred_xgboost2, "auc")@y.values[[1]]
+AUC_xgboost2
+```
+
+```{r}
+#AUC for 300 trees
+phat_xgboost3 <- predict(md_xgboost3, newdata = X_test)
+rocr_pred_xgboost3 <- prediction(phat_xgboost3, d_test$y)
+AUC_xgboost3 <- performance(rocr_pred_xgboost3, "auc")@y.values[[1]]
+AUC_xgboost3
+```
+
+
+
+***
+
+
+####3. Using randomForest package
+
+Step1: Load our data set 
+```{r, message = F}
+dat <- read.csv("bank.csv")
+dat$y <- as.factor(dat$y)
+```
+
+Step2: Split our data into training and test data set
+
+```{r}
+train_sample = sample(nrow(dat), size = nrow(dat)*0.6)
+train_dat = dat[train_sample,]
+test_dat = dat[-train_sample,]
+```
+
+
+Step3: Apply random forest model 
+```{r}
+#Build 100 trees
+system.time({
+  md_rf1 <- randomForest(y=train_dat$y, x = train_dat[, -ncol(train_dat)],
+                  ytest = test_dat$y, xtest = test_dat[, -ncol(test_dat)],
+                  ntree = 100, mtry = 3, keep.forest = TRUE)
+
+})
+md_rf1
+```
+
+```{r}
+#Build 200 trees
+system.time({
+  md_rf2 <- randomForest(y=train_dat$y, x = train_dat[, -ncol(train_dat)],
+                  ytest = test_dat$y, xtest = test_dat[, -ncol(test_dat)],
+                  ntree = 200, mtry = 3, keep.forest = TRUE)
+
+})
+md_rf2
+```
+
+```{r}
+#Build 300 trees
+system.time({
+  md_rf3 <- randomForest(y=train_dat$y, x = train_dat[, -ncol(train_dat)],
+                  ytest = test_dat$y, xtest = test_dat[, -ncol(test_dat)],
+                  ntree = 300, mtry = 3, keep.forest = TRUE)
+
+})
+md_rf3
+```
+
+
+
+Step4: Check variable importance (optional)
+```{r}
+varImpPlot(md_rf1,type=2)
+``` 
+We may also see that the feature "duration"is the most important one. Therefore, while we're considering which features to be applied to our random forest model, we can firstly build a basic random forest model. Then, **varImpPlot** function can help us identify which features have greater influence to our model. This step can help optimize the model.
+
+***
+
+###C. Comparisons
+####Compare random forest with logistic model within different packages
+
+Packages         | AUC   | Processing Time (/sec) 
+-----------------|-------|------------------
+h2o-rf (100 trees) | 0.9314315 | 9.22
+h2o-rf (200 trees) | 0.9316806 | 14.76
+h2o-rf (300 trees) | 0.9319108 | 18.99
+XGBoost-rf (100 trees) | 0.9018877 | 2.28
+XGBoost-rf (200 trees) | 0.8982503 | 4.68
+XGBoost-rf (300 trees) | 0.9042339 | 6.95
+randomForest (100 trees) | Error rate = 9.23% | 4.61
+randomForest (200 trees) | Error rate = 9.15% | 8.78
+randomForest (300 trees) | Error rate = 9.08% | 11.95
+glmnet-glm (w/ lasso)|0.9037  | 0.23
+glmnet-glm (w/o lasso)| 0.875|0.18
+h2o-glm (w/lasso)    |0.9041  |1.51
+h2o-glm (w/o lasso)  |0.8687  |0.52
+
+* ####We can see once we increase the amount of trees, in most cases, the accuracy may go up. However, it may take a bit longer time to train the models.
+* ####If we control our method to random forest, we can clearly see the XGBoost package can efficiently train our model (although it's accuracy is worse that other two packages)
+* ####If we compare different methods with different packages, we can also see that, in general, random forest model performs better accuracy than logistic model.  
+
+
+
+###This is the end of the weekly report. Thank you for your reading! :)
+
+***
+

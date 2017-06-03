@@ -1,0 +1,190 @@
+---
+title: "HW4-test"
+author: "Yuan Yi Chen (Eve)"
+date: "2017年6月3日"
+output: html_document
+---
+
+
+```{r, include = F}
+setwd("C:/Users/Eve/Dropbox/UCLA Files/Courses/497 Individual Study")
+```
+#**Agenda**
+
+###**A. Brief introduction of What I learn this week**
+  * ####Before this Week: 
+    + Know how to use **glm**, **glmnet** and **h20** functions to run logistic regression
+    + Know in what circumstance should I apply logistic regression model
+  * ####After this Week:
+    + Know how to use **randomForest package**, **h20 package** and **XGBoost package** functions to run logistic regression
+    + Know in what circumstance should I apply random forest model
+  * ####Plan for Next Week:
+    + Study Basic Neural Network
+    + Apply Neural Network to MNist data set with **h2o package** and **Tensorflow**
+    
+###**B. Random Forest Codes: Using R, H2O and XGBoost packages**
+  * ####R - h2o package
+  * ####R - XGBoost package
+  * ####R - randomForest package
+  
+
+***
+
+###A. Brief introduction of What I learn this week
+
+#####Random forest is a popular method to solve different kinds of machine learning tasks. Due to it's high accuracy, it seems to me that it's more prone to a predictive model instead of a description model. Basically, random forest does two things:
+  * Randomly choose different features to build different trees
+  * Calculate the average value of all the trees it created previously
+
+#####After we apply random forest model to the test data set, We usually can build up confusion matrix, AUC, ROC curve and variable importance to see how does our model perform. Also, there is no limitation about how many trees that we can build. The only concern is the computability of our desktop. That is, random forest seldom overfits in our training set.(Usually, an overfitting will happen if we have only few features to train.) 
+
+#####The general steps are
+  * Manipulate our data set (attention to features which are factors)
+  * Train the random forest model
+  * Predict a test data set
+  * View the accuracy, confusion matrix, variable importance
+  * Rebuild the random forest model based on the fourth step
+  * Predict our test data set again
+  * Check the accuracy, confusion matrix, partial dependence
+  * Apply other methods to double check if they all come to the same conclusion
+  
+***
+
+#####Here are some pros and cons that I saw from the textbook and Quora
+Random Forest Model |          
+----|-----------------------------------------------------------
+**Pros**|
+    | 1. Fast to train our training data
+    | 2. High accuracy
+    | 3. Automatically Generalized our data within the process
+**Cons**| 
+    | 1. Inconsistent - because it's classification method
+    | 2. Hard to interpret the results
+    | 3. Slow to predict our testing data
+    | 4. Need high computability, which may be expensive
+    
+***
+
+###B. Set up a working environment
+
+Step1: Setup
+```{r, include = F}
+#Remove Objects
+rm(list=ls())
+
+#Clear Memory
+gc(reset=TRUE)
+
+#Set Working Directory
+setwd("C:/Users/Eve/Dropbox/UCLA Files/Courses/418 Tools of Data Science/STATS 418 - HW4")
+```
+
+Step2: Load Packages
+```{r, message = F}
+library(readr)   #Use to read data
+library(glmnet)  #Use to apply logistic regression
+library(ROCR)    #Use to calcuate AUC
+library(h2o)     #Use to run logistic regression and random forest 
+library(xgboost) #Use to run random forest model
+```
+
+Step3: Load data set
+This **bank marketing** data set is provided by a Portuguese banking institution. It takes records on every phone calls they make to promote their product - term deposit. Our goal is to predict if a customer will subsribe a product after they make phone calls.
+
+```{r}
+dat <- read.csv("test.csv")
+str(dat)
+```
+
+We totally have 45211 observations, 15 input variables and 1 output variables (y).
+
+```{r}
+head(dat, 3)
+```
+
+
+
+***
+
+###B. Apply models
+  * Using Neural Networks
+  * Using random search (GBM algorithm)
+  * Using ensemble
+  * Using Logistic Regression
+  * Using random forest
+  * Using GBM model
+
+***
+
+#####1. Using Neural Networks
+  * Layers (100, 100) with early stopping
+  * More layers (100, 100, 100, 100) with early stopping
+  * 
+
+#####(a.) Layers (100, 100) with early stopping
+
+Step1: Initiate h2o package
+```{r, message = F}
+library(h2o)
+h2o.init(nthreads=-1)
+```
+```{r}
+h2o.no_progress()
+```
+
+Step2: Load data & split it into dx_train, dx_valid and dx_test data sets
+```{r}
+dx <- h2o.importFile("test.csv")
+dx_split <- h2o.splitFrame(dx, ratios = c(0.6,0.2), seed = 123)
+dx_train <- dx_split[[1]]
+dx_valid <- dx_split[[2]]
+dx_test <- dx_split[[3]]
+```
+Step3: Build model1
+```{r}
+Xnames <- names(dx_train)[which(names(dx_train)!="y")]
+system.time({
+  md1 <- h2o.deeplearning(x = Xnames, y = "y", training_frame = dx_train, validation_frame = dx_valid,hidden = c(100,100), epochs = 100, stopping_rounds = 2, stopping_metric = "AUC", stopping_tolerance = 0) 
+})
+```
+
+Step4: Make prediction & AUC
+```{r}
+auc1 <- h2o.performance(md1, dx_test)@metrics$AUC
+auc1
+```
+
+#####(b.) Layers (100, 100, 100, 100) with early stopping
+
+Step1: Build model1
+```{r}
+system.time({
+  md2 <- h2o.deeplearning(x = Xnames, y = "y", training_frame = dx_train, validation_frame = dx_valid,
+                         activation = "Rectifier", hidden = c(100,100,100,100), 
+                         epochs = 100, stopping_rounds = 2, stopping_metric = "AUC", stopping_tolerance = 0) 
+})
+```
+
+Step2: Make prediction & AUC
+```{r}
+auc2 <- h2o.performance(md2, dx_test)@metrics$AUC
+auc2
+```
+
+
+#####(b.) Layers (100, 100, 100, 100) with early stopping
+
+Step1: Build model1
+```{r}
+system.time({
+  md2 <- h2o.deeplearning(x = Xnames, y = "y", training_frame = dx_train, validation_frame = dx_valid,
+                         activation = "Rectifier", hidden = c(100,100,100,100), 
+                         epochs = 100, stopping_rounds = 2, stopping_metric = "AUC", stopping_tolerance = 0) 
+})
+```
+
+Step2: Make prediction & AUC
+```{r}
+auc2 <- h2o.performance(md2, dx_test)@metrics$AUC
+auc2
+```
