@@ -177,22 +177,69 @@ auc2
 ```
 
 
-#####(b.) Layers (100, 100, 100, 100) with early stopping
+#####(c.) Layers (100, 100) with early stopping & dropout rate
 
 Step1: Build model1
 ```{r}
 system.time({
-  md2 <- h2o.deeplearning(x = Xnames, y = "y", training_frame = dx_train, validation_frame = dx_valid,
-                         activation = "Rectifier", hidden = c(100,100,100,100), 
-                         epochs = 100, stopping_rounds = 2, stopping_metric = "AUC", stopping_tolerance = 0) 
+  md3 <- h2o.deeplearning(x = Xnames, y = "y", training_frame = dx_train, validation_frame = dx_valid, activation = "Rectifier", hidden = c(100,100), input_dropout_ratio = 0.2, epochs = 100, stopping_rounds = 2, stopping_metric = "AUC", stopping_tolerance = 0) 
 })
 ```
 
 Step2: Make prediction & AUC
 ```{r}
-auc2 <- h2o.performance(md2, dx_test)@metrics$AUC
-auc2
+auc3 <- h2o.performance(md3, dx_test)@metrics$AUC
+auc3
 ```
+
+#####(d.) Layers (100, 100) with early stopping & l1 & l2
+
+Step1: Build model1
+```{r}
+system.time({
+  md4 <- h2o.deeplearning(x = Xnames, y = "y", training_frame = dx_train, validation_frame = dx_valid, activation = "Rectifier", hidden = c(100,100), l1 = 1e-5, l2 = 1e-5, epochs = 100, stopping_rounds = 2, stopping_metric = "AUC", stopping_tolerance = 0) 
+})
+```
+
+Step2: Make prediction & AUC
+```{r}
+auc4 <- h2o.performance(md4, dx_test)@metrics$AUC
+auc4
+```
+
+#####(e.) Layers (100, 100) with early stopping & rho & epsilon
+
+Step1: Build model1
+```{r}
+system.time({
+  md5 <- h2o.deeplearning(x = Xnames, y = "y", training_frame = dx_train, validation_frame = dx_valid, activation = "Rectifier", hidden = c(100,100), 
+                         rho = 0.95, epsilon = 1e-06, epochs = 100, stopping_rounds = 2, stopping_metric = "AUC", stopping_tolerance = 0) 
+})
+```
+
+Step2: Make prediction & AUC
+```{r}
+auc5 <- h2o.performance(md5, dx_test)@metrics$AUC
+auc5
+```
+
+#####(f.) Layers (100, 100) with early stopping & rate & momentum
+
+Step1: Build model1
+```{r}
+system.time({
+  md6 <- h2o.deeplearning(x = Xnames, y = "y", training_frame = dx_train, validation_frame = dx_valid, activation = "Rectifier", hidden = c(100,100), adaptive_rate = FALSE, rate = 0.01, rate_annealing = 1e-05, momentum_start = 0.5, momentum_ramp = 1e4, momentum_stable = 0.9, epochs = 100, stopping_rounds = 2, stopping_metric = "AUC", stopping_tolerance = 0) 
+})
+```
+
+Step2: Make prediction & AUC
+```{r}
+auc6 <- h2o.performance(md6, dx_test)@metrics$AUC
+auc6 
+```
+
+
+
 
 ***
 

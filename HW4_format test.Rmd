@@ -87,35 +87,6 @@ library(ROCR)    #Use to calcuate AUC
 library(h2o)     #Use to run logistic regression and random forest 
 library(xgboost) #Use to run random forest model
 ```
-
-Step3: Load data set
-This **bank marketing** data set is provided by a Portuguese banking institution. It takes records on every phone calls they make to promote their product - term deposit. Our goal is to predict if a customer will subsribe a product after they make phone calls.
-
-```{r}
-dat <- read.csv("test.csv")
-str(dat)
-```
-
-We totally have 45211 observations, 15 input variables and 1 output variables (y).
-
-```{r}
-head(dat, 3)
-```
-
-
-
-***
-
-###B. Apply models
-  * Using Neural Networks
-  * Using random search (GBM algorithm)
-  * Using ensemble
-  * Using Logistic Regression
-  * Using random forest
-  * Using GBM model
-
-***
-
 #####1. Using Neural Networks
   * Layers (100, 100) with early stopping
   * More layers (100, 100, 100, 100) with early stopping
@@ -126,10 +97,13 @@ head(dat, 3)
 Step1: Initiate h2o package
 ```{r, message = F}
 library(h2o)
-h2o.init(nthreads=-1)
 ```
 ```{r}
 h2o.no_progress()
+```
+
+```{r, message = F}
+h2o.init(nthreads=-1)
 ```
 
 Step2: Load data & split it into dx_train, dx_valid and dx_test data sets
@@ -172,19 +146,64 @@ auc2
 ```
 
 
-#####(b.) Layers (100, 100, 100, 100) with early stopping
+#####(c.) Layers (100, 100) with early stopping & dropout rate
 
 Step1: Build model1
 ```{r}
 system.time({
-  md2 <- h2o.deeplearning(x = Xnames, y = "y", training_frame = dx_train, validation_frame = dx_valid,
-                         activation = "Rectifier", hidden = c(100,100,100,100), 
-                         epochs = 100, stopping_rounds = 2, stopping_metric = "AUC", stopping_tolerance = 0) 
+  md3 <- h2o.deeplearning(x = Xnames, y = "y", training_frame = dx_train, validation_frame = dx_valid, activation = "Rectifier", hidden = c(100,100), input_dropout_ratio = 0.2, epochs = 100, stopping_rounds = 2, stopping_metric = "AUC", stopping_tolerance = 0) 
 })
 ```
 
 Step2: Make prediction & AUC
 ```{r}
-auc2 <- h2o.performance(md2, dx_test)@metrics$AUC
-auc2
+auc3 <- h2o.performance(md3, dx_test)@metrics$AUC
+auc3
 ```
+
+#####(d.) Layers (100, 100) with early stopping & l1 & l2
+
+Step1: Build model1
+```{r}
+system.time({
+  md4 <- h2o.deeplearning(x = Xnames, y = "y", training_frame = dx_train, validation_frame = dx_valid, activation = "Rectifier", hidden = c(100,100), l1 = 1e-5, l2 = 1e-5, epochs = 100, stopping_rounds = 2, stopping_metric = "AUC", stopping_tolerance = 0) 
+})
+```
+
+Step2: Make prediction & AUC
+```{r}
+auc4 <- h2o.performance(md4, dx_test)@metrics$AUC
+auc4
+```
+
+#####(e.) Layers (100, 100) with early stopping & rho & epsilon
+
+Step1: Build model1
+```{r}
+system.time({
+  md5 <- h2o.deeplearning(x = Xnames, y = "y", training_frame = dx_train, validation_frame = dx_valid, activation = "Rectifier", hidden = c(100,100), 
+                         rho = 0.95, epsilon = 1e-06, epochs = 100, stopping_rounds = 2, stopping_metric = "AUC", stopping_tolerance = 0) 
+})
+```
+
+Step2: Make prediction & AUC
+```{r}
+auc5 <- h2o.performance(md5, dx_test)@metrics$AUC
+auc5
+```
+
+#####(f.) Layers (100, 100) with early stopping & rate & momentum
+
+Step1: Build model1
+```{r}
+system.time({
+  md6 <- h2o.deeplearning(x = Xnames, y = "y", training_frame = dx_train, validation_frame = dx_valid, activation = "Rectifier", hidden = c(100,100), adaptive_rate = FALSE, rate = 0.01, rate_annealing = 1e-05, momentum_start = 0.5, momentum_ramp = 1e4, momentum_stable = 0.9, epochs = 100, stopping_rounds = 2, stopping_metric = "AUC", stopping_tolerance = 0) 
+})
+```
+
+Step2: Make prediction & AUC
+```{r}
+auc6 <- h2o.performance(md6, dx_test)@metrics$AUC
+auc6 
+```
+

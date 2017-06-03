@@ -233,49 +233,6 @@ library(glmnet)  #Use to apply logistic regression
 library(ROCR)    #Use to calcuate AUC
 library(h2o)     #Use to run logistic regression and random forest 
 library(xgboost) #Use to run random forest model</code></pre>
-<p>Step3: Load data set This <strong>bank marketing</strong> data set is provided by a Portuguese banking institution. It takes records on every phone calls they make to promote their product - term deposit. Our goal is to predict if a customer will subsribe a product after they make phone calls.</p>
-<pre class="r"><code>dat &lt;- read.csv(&quot;test.csv&quot;)
-str(dat)</code></pre>
-<pre><code>## 'data.frame':    45211 obs. of  16 variables:
-##  $ job      : Factor w/ 12 levels &quot;admin.&quot;,&quot;blue-collar&quot;,..: 5 10 3 2 12 5 5 3 6 10 ...
-##  $ marital  : Factor w/ 3 levels &quot;divorced&quot;,&quot;married&quot;,..: 2 3 2 2 3 2 3 1 2 3 ...
-##  $ education: Factor w/ 4 levels &quot;primary&quot;,&quot;secondary&quot;,..: 3 2 2 4 4 3 3 3 1 2 ...
-##  $ balance  : int  2143 29 2 1506 1 231 447 2 121 593 ...
-##  $ age      : int  58 44 33 47 33 35 28 42 58 43 ...
-##  $ housing  : Factor w/ 2 levels &quot;N&quot;,&quot;Y&quot;: 2 2 2 2 1 2 2 2 2 2 ...
-##  $ loan     : Factor w/ 2 levels &quot;N&quot;,&quot;Y&quot;: 1 1 2 1 1 1 2 1 1 1 ...
-##  $ contact  : Factor w/ 3 levels &quot;cellular&quot;,&quot;telephone&quot;,..: 3 3 3 3 3 3 3 3 3 3 ...
-##  $ day      : int  5 5 5 5 5 5 5 5 5 5 ...
-##  $ month    : Factor w/ 12 levels &quot;apr&quot;,&quot;aug&quot;,&quot;dec&quot;,..: 9 9 9 9 9 9 9 9 9 9 ...
-##  $ duration : int  261 151 76 92 198 139 217 380 50 55 ...
-##  $ campaign : int  1 1 1 1 1 1 1 1 1 1 ...
-##  $ pdays    : int  -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 ...
-##  $ previous : int  0 0 0 0 0 0 0 0 0 0 ...
-##  $ poutcome : Factor w/ 4 levels &quot;failure&quot;,&quot;other&quot;,..: 4 4 4 4 4 4 4 4 4 4 ...
-##  $ y        : Factor w/ 2 levels &quot;N&quot;,&quot;Y&quot;: 1 1 1 1 1 1 1 1 1 1 ...</code></pre>
-<p>We totally have 45211 observations, 15 input variables and 1 output variables (y).</p>
-<pre class="r"><code>head(dat, 3)</code></pre>
-<pre><code>##            job marital education balance age housing loan contact day
-## 1   management married  tertiary    2143  58       Y    N unknown   5
-## 2   technician  single secondary      29  44       Y    N unknown   5
-## 3 entrepreneur married secondary       2  33       Y    Y unknown   5
-##   month duration campaign pdays previous poutcome y
-## 1   may      261        1    -1        0  unknown N
-## 2   may      151        1    -1        0  unknown N
-## 3   may       76        1    -1        0  unknown N</code></pre>
-<hr />
-</div>
-<div id="b.-apply-models" class="section level3">
-<h3>B. Apply models</h3>
-<ul>
-<li>Using Neural Networks</li>
-<li>Using random search (GBM algorithm)</li>
-<li>Using ensemble</li>
-<li>Using Logistic Regression</li>
-<li>Using random forest</li>
-<li>Using GBM model</li>
-</ul>
-<hr />
 <div id="using-neural-networks" class="section level5">
 <h5>1. Using Neural Networks</h5>
 <ul>
@@ -287,23 +244,24 @@ str(dat)</code></pre>
 <div id="a.-layers-100-100-with-early-stopping" class="section level5">
 <h5>(a.) Layers (100, 100) with early stopping</h5>
 <p>Step1: Initiate h2o package</p>
-<pre class="r"><code>library(h2o)
-h2o.init(nthreads=-1)</code></pre>
+<pre class="r"><code>library(h2o)</code></pre>
+<pre class="r"><code>h2o.no_progress()</code></pre>
+<pre class="r"><code>h2o.init(nthreads=-1)</code></pre>
 <pre><code>## 
 ## H2O is not running yet, starting it now...
 ## 
 ## Note:  In case of errors look at the following log files:
-##     C:\Users\Eve\AppData\Local\Temp\RtmpQNoD4J/h2o_Eve_started_from_r.out
-##     C:\Users\Eve\AppData\Local\Temp\RtmpQNoD4J/h2o_Eve_started_from_r.err
+##     C:\Users\Eve\AppData\Local\Temp\RtmpOQttWS/h2o_Eve_started_from_r.out
+##     C:\Users\Eve\AppData\Local\Temp\RtmpOQttWS/h2o_Eve_started_from_r.err
 ## 
 ## 
-## Starting H2O JVM and connecting: . Connection successful!
+## Starting H2O JVM and connecting: .. Connection successful!
 ## 
 ## R is connected to the H2O cluster: 
-##     H2O cluster uptime:         4 seconds 468 milliseconds 
+##     H2O cluster uptime:         5 seconds 98 milliseconds 
 ##     H2O cluster version:        3.10.4.6 
 ##     H2O cluster version age:    1 month and 7 days  
-##     H2O cluster name:           H2O_started_from_R_Eve_yyb455 
+##     H2O cluster name:           H2O_started_from_R_Eve_fwc284 
 ##     H2O cluster total nodes:    1 
 ##     H2O cluster total memory:   3.48 GB 
 ##     H2O cluster total cores:    4 
@@ -314,7 +272,6 @@ h2o.init(nthreads=-1)</code></pre>
 ##     H2O Connection proxy:       NA 
 ##     H2O Internal Security:      FALSE 
 ##     R Version:                  R version 3.4.0 (2017-04-21)</code></pre>
-<pre class="r"><code>h2o.no_progress()</code></pre>
 <p>Step2: Load data &amp; split it into dx_train, dx_valid and dx_test data sets</p>
 <pre class="r"><code>dx &lt;- h2o.importFile(&quot;test.csv&quot;)
 dx_split &lt;- h2o.splitFrame(dx, ratios = c(0.6,0.2), seed = 123)
@@ -327,11 +284,11 @@ system.time({
   md1 &lt;- h2o.deeplearning(x = Xnames, y = &quot;y&quot;, training_frame = dx_train, validation_frame = dx_valid,hidden = c(100,100), epochs = 100, stopping_rounds = 2, stopping_metric = &quot;AUC&quot;, stopping_tolerance = 0) 
 })</code></pre>
 <pre><code>##    user  system elapsed 
-##    0.56    0.00   46.76</code></pre>
+##    0.61    0.04   42.31</code></pre>
 <p>Step4: Make prediction &amp; AUC</p>
 <pre class="r"><code>auc1 &lt;- h2o.performance(md1, dx_test)@metrics$AUC
 auc1</code></pre>
-<pre><code>## [1] 0.8775262</code></pre>
+<pre><code>## [1] 0.8532829</code></pre>
 </div>
 <div id="b.-layers-100-100-100-100-with-early-stopping" class="section level5">
 <h5>(b.) Layers (100, 100, 100, 100) with early stopping</h5>
@@ -342,26 +299,64 @@ auc1</code></pre>
                          epochs = 100, stopping_rounds = 2, stopping_metric = &quot;AUC&quot;, stopping_tolerance = 0) 
 })</code></pre>
 <pre><code>##    user  system elapsed 
-##    0.64    0.03   78.03</code></pre>
+##    0.54    0.02   37.55</code></pre>
 <p>Step2: Make prediction &amp; AUC</p>
 <pre class="r"><code>auc2 &lt;- h2o.performance(md2, dx_test)@metrics$AUC
 auc2</code></pre>
-<pre><code>## [1] 0.8698856</code></pre>
+<pre><code>## [1] 0.8471005</code></pre>
 </div>
-<div id="b.-layers-100-100-100-100-with-early-stopping-1" class="section level5">
-<h5>(b.) Layers (100, 100, 100, 100) with early stopping</h5>
+<div id="c.-layers-100-100-with-early-stopping-dropout-rate" class="section level5">
+<h5>(c.) Layers (100, 100) with early stopping &amp; dropout rate</h5>
 <p>Step1: Build model1</p>
 <pre class="r"><code>system.time({
-  md2 &lt;- h2o.deeplearning(x = Xnames, y = &quot;y&quot;, training_frame = dx_train, validation_frame = dx_valid,
-                         activation = &quot;Rectifier&quot;, hidden = c(100,100,100,100), 
-                         epochs = 100, stopping_rounds = 2, stopping_metric = &quot;AUC&quot;, stopping_tolerance = 0) 
+  md3 &lt;- h2o.deeplearning(x = Xnames, y = &quot;y&quot;, training_frame = dx_train, validation_frame = dx_valid, activation = &quot;Rectifier&quot;, hidden = c(100,100), input_dropout_ratio = 0.2, epochs = 100, stopping_rounds = 2, stopping_metric = &quot;AUC&quot;, stopping_tolerance = 0) 
 })</code></pre>
 <pre><code>##    user  system elapsed 
-##    0.37    0.00   71.55</code></pre>
+##    0.37    0.01   48.74</code></pre>
 <p>Step2: Make prediction &amp; AUC</p>
-<pre class="r"><code>auc2 &lt;- h2o.performance(md2, dx_test)@metrics$AUC
-auc2</code></pre>
-<pre><code>## [1] 0.8662092</code></pre>
+<pre class="r"><code>auc3 &lt;- h2o.performance(md3, dx_test)@metrics$AUC
+auc3</code></pre>
+<pre><code>## [1] 0.8722131</code></pre>
+</div>
+<div id="d.-layers-100-100-with-early-stopping-l1-l2" class="section level5">
+<h5>(d.) Layers (100, 100) with early stopping &amp; l1 &amp; l2</h5>
+<p>Step1: Build model1</p>
+<pre class="r"><code>system.time({
+  md4 &lt;- h2o.deeplearning(x = Xnames, y = &quot;y&quot;, training_frame = dx_train, validation_frame = dx_valid, activation = &quot;Rectifier&quot;, hidden = c(100,100), l1 = 1e-5, l2 = 1e-5, epochs = 100, stopping_rounds = 2, stopping_metric = &quot;AUC&quot;, stopping_tolerance = 0) 
+})</code></pre>
+<pre><code>##    user  system elapsed 
+##    0.37    0.02   31.84</code></pre>
+<p>Step2: Make prediction &amp; AUC</p>
+<pre class="r"><code>auc4 &lt;- h2o.performance(md4, dx_test)@metrics$AUC
+auc4</code></pre>
+<pre><code>## [1] 0.8737977</code></pre>
+</div>
+<div id="e.-layers-100-100-with-early-stopping-rho-epsilon" class="section level5">
+<h5>(e.) Layers (100, 100) with early stopping &amp; rho &amp; epsilon</h5>
+<p>Step1: Build model1</p>
+<pre class="r"><code>system.time({
+  md5 &lt;- h2o.deeplearning(x = Xnames, y = &quot;y&quot;, training_frame = dx_train, validation_frame = dx_valid, activation = &quot;Rectifier&quot;, hidden = c(100,100), 
+                         rho = 0.95, epsilon = 1e-06, epochs = 100, stopping_rounds = 2, stopping_metric = &quot;AUC&quot;, stopping_tolerance = 0) 
+})</code></pre>
+<pre><code>##    user  system elapsed 
+##    0.41    0.03   47.91</code></pre>
+<p>Step2: Make prediction &amp; AUC</p>
+<pre class="r"><code>auc5 &lt;- h2o.performance(md5, dx_test)@metrics$AUC
+auc5</code></pre>
+<pre><code>## [1] 0.8473038</code></pre>
+</div>
+<div id="f.-layers-100-100-with-early-stopping-rate-momentum" class="section level5">
+<h5>(f.) Layers (100, 100) with early stopping &amp; rate &amp; momentum</h5>
+<p>Step1: Build model1</p>
+<pre class="r"><code>system.time({
+  md6 &lt;- h2o.deeplearning(x = Xnames, y = &quot;y&quot;, training_frame = dx_train, validation_frame = dx_valid, activation = &quot;Rectifier&quot;, hidden = c(100,100), adaptive_rate = FALSE, rate = 0.01, rate_annealing = 1e-05, momentum_start = 0.5, momentum_ramp = 1e4, momentum_stable = 0.9, epochs = 100, stopping_rounds = 2, stopping_metric = &quot;AUC&quot;, stopping_tolerance = 0) 
+})</code></pre>
+<pre><code>##    user  system elapsed 
+##    0.42    0.00   40.82</code></pre>
+<p>Step2: Make prediction &amp; AUC</p>
+<pre class="r"><code>auc6 &lt;- h2o.performance(md6, dx_test)@metrics$AUC
+auc6 </code></pre>
+<pre><code>## [1] 0.9094542</code></pre>
 </div>
 </div>
 </div>
