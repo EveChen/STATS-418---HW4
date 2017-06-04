@@ -366,7 +366,7 @@ system.time({
 Step3: Build our ensemble model with the above four models 
 ```{r}
 system.time({
-  md_ensemble <- h2o.stackedEnsemble(x = Xnames, y = "y", training_frame = dx_train,base_models = list(md23@model_id, md24@model_id, md25@model_id, md26@model_id))
+  md_ensemble <- h2o.stackedEnsemble(x = Xnames, y = "y", training_frame = dx_train,base_models = list(md_logistic@model_id, md_randomforest@model_id, md_gbm@model_id, md_neuralnetwork@model_id))
 })
 ```
 
