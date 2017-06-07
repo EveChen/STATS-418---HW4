@@ -18,9 +18,6 @@ setwd("C:/Users/Eve/Dropbox/UCLA Files/Courses/418 Tools of Data Science/STATS 4
 ###**C. Take a Look of Our Data**
 ###**D. Statistical Models**
 ###**E. Models, AUC and ROC**
-  + #####All Features Included
-  + #####Limited Features Included
-
 ###**F. Conclusion**
 
   
@@ -119,9 +116,7 @@ head(dat, 3)
 ###**D. Statistical Models**
 
 ###**E. Models, AUC and ROC**
-####*Section 1: With all the features
 
-####**1. Neural Network**
 ```{r, include = F}
 library(h2o)
 ```
@@ -133,8 +128,8 @@ h2o.no_progress()
 h2o.init(nthreads=-1)
 ```
 
-```{r}
-#Split data sets: train, validation and test
+```{r, include=F}
+#Data sets with validation
 dx <- h2o.importFile("test.csv")
 dx_split <- h2o.splitFrame(dx, ratios = c(0.6,0.2), seed = 123)
 dx_train <- dx_split[[1]]
@@ -143,39 +138,17 @@ dx_test <- dx_split[[3]]
 Xnames <- setdiff(names(dx_train),"y")
 ```
 
-```{r}
-#Neural Network Model (the Best, highest AUC)
-system.time({
-  md_nn <- h2o.deeplearning(x = Xnames, y = "y", training_frame = dx_train, validation_frame = dx_valid,
-            activation = "Rectifier", hidden = c(50,50), 
-            adaptive_rate = FALSE, rate = 0.01, rate_annealing = 1e-04, 
-            momentum_start = 0.5, momentum_ramp = 1e5, momentum_stable = 0.99,
-            epochs = 100, stopping_rounds = 2, stopping_metric = "AUC", stopping_tolerance = 0) 
-})
-```
-```{r}
-#AUC
-h2o.performance(md_nn, dx_test)@metrics$AUC
-```
-
-
-
-
-####**2. Random Search (GBM)**
-
-
-####**3. Ensemble (random forest, GBM and neural network)**
-
-
-####**4. GBM**
 ```{r, include=FALSE}
-#Use different data set
+#Data set without validation
 dnovalid <- h2o.importFile("test.csv")
 dnovalid_split <- h2o.splitFrame(dnovalid, ratios = 0.7, seed = 123)
 dnovalid_train <- dnovalid_split[[1]]
 dnovalid_test <- dnovalid_split[[2]]
 Xnames_novalid <- setdiff(names(dnovalid_train),"y")
 ```
+
+
+####**1. GBM**
 
 ```{r}
 #GBM model
@@ -191,7 +164,7 @@ h2o.auc(h2o.performance(md_gbm, dnovalid_test))
 ***
 
 
-####**5. Random Forest**
+####**2. Random Forest**
 ```{r}
 system.time({
   md_rf <- h2o.randomForest(x = Xnames, y = "y", training_frame = dx_train, ntrees = 100, seed = 123, nfolds = 5, fold_assignment = "Modulo", keep_cross_validation_predictions = TRUE)
@@ -203,7 +176,7 @@ h2o.auc(h2o.performance(md_rf, dx_test))
 
 ***
 
-####**6. Logistic Regression**
+####**3. Logistic Regression**
 ```{r}
 system.time({
   md_logistic <- h2o.glm(x = Xnames_novalid, y = "y", training_frame = dnovalid_train, 
@@ -217,26 +190,27 @@ system.time({
 h2o.auc(h2o.performance(md_logistic, dnovalid_test))
 ```
 
+####**4. Neural Network Model**
 
+```{r}
+#Neural Network Model (the Best, highest AUC)
+system.time({
+  md_nn <- h2o.deeplearning(x = Xnames, y = "y", training_frame = dx_train, validation_frame = dx_valid,
+            activation = "Rectifier", hidden = c(50,50), 
+            adaptive_rate = FALSE, rate = 0.01, rate_annealing = 1e-04, 
+            momentum_start = 0.5, momentum_ramp = 1e5, momentum_stable = 0.99,
+            epochs = 100, stopping_rounds = 2, stopping_metric = "AUC", stopping_tolerance = 0) 
+})
+```
+```{r}
+#AUC
+h2o.performance(md_nn, dx_test)@metrics$AUC
+```
+***
 
-####*Section 2: With limited the features
-####**1. Neural Network**
+####**5. Ensemble (random forest, GBM and neural network)**
 
-
-####**2. Random Search (GBM)**
-
-
-####**3. Ensemble (random forest, GBM and neural network)**
-
-
-####**4. GBM**
-
-
-####**5. Random Forest**
-
-
-####**6. Logistic Regression**
-
+####**6. Random Search (GBM)**
 
 
 
