@@ -1,0 +1,115 @@
+---
+title: "HW4-test-All the Neural Network Models"
+author: "Yuan Yi Chen (Eve)"
+date: "2017年6月4日"
+output: html_document
+---
+
+Step1: Setup
+```{r, include = F}
+#Remove Objects
+rm(list=ls())
+
+#Clear Memory
+gc(reset=TRUE)
+
+#Set Working Directory
+setwd("C:/Users/Eve/Dropbox/UCLA Files/Courses/418 Tools of Data Science/STATS 418 - HW4")
+```
+
+Step2: Load Packages
+```{r, message = F}
+library(readr)   #Use to read data
+library(glmnet)  #Use to apply logistic regression
+library(ROCR)    #Use to calcuate AUC
+library(h2o)     #Use to run logistic regression and random forest 
+library(xgboost) #Use to run random forest model
+```
+
+
+***
+
+####**E-3. Ensemble (random forest, GBM and neural network)**
+
+```{r, include = F}
+library(h2o)
+```
+```{r, include = F}
+h2o.no_progress()
+```
+
+```{r, include = F}
+h2o.init(nthreads=-1)
+```
+
+#####Step1: Load data & split it into dx_train, dx_valid and dx_test data sets
+
+```{r}
+dx <- h2o.importFile("test.csv")
+dx_split <- h2o.splitFrame(dx, ratios = 0.7, seed = 123)
+dx_train <- dx_split[[1]]
+dx_test <- dx_split[[2]]
+Xnames <- setdiff(names(dx_train),"y")
+```
+
+
+#####Step2: Create several models (rf + gbm + NN = Ensemble)
+
+**<Random Forest>**
+```{r}
+system.time({
+  md_rf <- h2o.randomForest(x = Xnames, y = "y", training_frame = dx_train, ntrees = 300, seed = 123, nfolds = 5, fold_assignment = "Modulo", keep_cross_validation_predictions = TRUE)
+})
+
+```
+
+***
+
+#####**<GBM>**
+```{r}
+system.time({
+  md_gbm <- h2o.gbm(x = Xnames, y = "y", training_frame = dx_train, distribution = "bernoulli", ntrees = 200, max_depth = 10, learn_rate = 0.1, nbins = 100, seed = 123, nfolds = 5, fold_assignment = "Modulo", keep_cross_validation_predictions = TRUE)    
+})
+```
+
+***
+#####**<Neural Network>**
+```{r}
+system.time({
+  md_nn <- h2o.deeplearning(x = Xnames, y = "y", training_frame = dx_train, activation = "Rectifier", hidden = c(100,100),adaptive_rate = FALSE, rate = 0.01, rate_annealing = 1e-04,momentum_start = 0.5, momentum_ramp = 1e5, momentum_stable = 0.99, epochs = 100, seed = 123, nfolds = 5, fold_assignment = "Modulo", keep_cross_validation_predictions = TRUE)
+  })
+```
+
+***
+
+
+#####**<Ensemble>**
+```{r}
+system.time({
+md_ensemble <- h2o.stackedEnsemble(x = Xnames, y = "y", training_frame = dx_train,base_models = list(md_rf@model_id, md_gbm@model_id, md_nn@model_id))
+})
+```
+
+***
+
+
+#####Check the AUC of Ensemble model
+```{r}
+h2o.auc(h2o.performance(md_ensemble, dx_test))
+```
+
+#####Coefficients of ensemble
+```{r}
+h2o.getModel(md_ensemble@model$metalearner$name)@model$coefficients_table
+```
+
+#####ROC of ensemble
+```{r, include = F}
+library(pROC)
+```
+```{r}
+phat <- predict(md_ensemble, newx = dx_test, type = "response")
+ROC_curve = roc(dx_test$y, phat)
+ROC_curve
+plot(ROC_curve)
+```

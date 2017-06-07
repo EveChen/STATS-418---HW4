@@ -123,228 +123,166 @@ $(document).ready(function () {
 </div>
 
 
-<div id="agenda" class="section level1">
-<h1><strong>Agenda</strong></h1>
-</div>
-<div id="agenda-1" class="section level1">
-<h1><strong>Agenda</strong></h1>
-<div id="a.-introduction" class="section level3">
-<h3><strong>A. Introduction</strong></h3>
-</div>
-<div id="b.-brief-summarization" class="section level3">
-<h3><strong>B. Brief Summarization</strong></h3>
-</div>
-<div id="c.-take-a-look-of-our-data" class="section level3">
-<h3><strong>C. Take a Look of Our Data</strong></h3>
-</div>
-<div id="d.-statistical-models" class="section level3">
-<h3><strong>D. Statistical Models</strong></h3>
-</div>
-<div id="e.-models-auc-and-roc" class="section level3">
-<h3><strong>E. Models, AUC and ROC</strong></h3>
-<ul>
-<li><h5 id="all-features-included">All Features Included</h5></li>
-<li><h5 id="limited-features-included">Limited Features Included</h5></li>
-</ul>
-</div>
-<div id="f.-conclusion" class="section level3">
-<h3><strong>F. Conclusion</strong></h3>
+<p>Step1: Setup</p>
+<p>Step2: Load Packages</p>
+<pre class="r"><code>library(readr)   #Use to read data
+library(glmnet)  #Use to apply logistic regression
+library(ROCR)    #Use to calcuate AUC
+library(h2o)     #Use to run logistic regression and random forest 
+library(xgboost) #Use to run random forest model</code></pre>
+<p>Step3: Load data set This <strong>bank marketing</strong> data set is provided by a Portuguese banking institution. It takes records on every phone calls they make to promote their product - term deposit. Our goal is to predict if a customer will subsribe a product after they make phone calls.</p>
+<pre class="r"><code>dat &lt;- read.csv(&quot;test.csv&quot;)
+str(dat)</code></pre>
+<pre><code>## 'data.frame':    45211 obs. of  16 variables:
+##  $ job      : Factor w/ 12 levels &quot;admin.&quot;,&quot;blue-collar&quot;,..: 5 10 3 2 12 5 5 3 6 10 ...
+##  $ marital  : Factor w/ 3 levels &quot;divorced&quot;,&quot;married&quot;,..: 2 3 2 2 3 2 3 1 2 3 ...
+##  $ education: Factor w/ 4 levels &quot;primary&quot;,&quot;secondary&quot;,..: 3 2 2 4 4 3 3 3 1 2 ...
+##  $ balance  : int  2143 29 2 1506 1 231 447 2 121 593 ...
+##  $ age      : int  58 44 33 47 33 35 28 42 58 43 ...
+##  $ housing  : Factor w/ 2 levels &quot;N&quot;,&quot;Y&quot;: 2 2 2 2 1 2 2 2 2 2 ...
+##  $ loan     : Factor w/ 2 levels &quot;N&quot;,&quot;Y&quot;: 1 1 2 1 1 1 2 1 1 1 ...
+##  $ contact  : Factor w/ 3 levels &quot;cellular&quot;,&quot;telephone&quot;,..: 3 3 3 3 3 3 3 3 3 3 ...
+##  $ day      : int  5 5 5 5 5 5 5 5 5 5 ...
+##  $ month    : Factor w/ 12 levels &quot;apr&quot;,&quot;aug&quot;,&quot;dec&quot;,..: 9 9 9 9 9 9 9 9 9 9 ...
+##  $ duration : int  261 151 76 92 198 139 217 380 50 55 ...
+##  $ campaign : int  1 1 1 1 1 1 1 1 1 1 ...
+##  $ pdays    : int  -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 ...
+##  $ previous : int  0 0 0 0 0 0 0 0 0 0 ...
+##  $ poutcome : Factor w/ 4 levels &quot;failure&quot;,&quot;other&quot;,..: 4 4 4 4 4 4 4 4 4 4 ...
+##  $ y        : Factor w/ 2 levels &quot;N&quot;,&quot;Y&quot;: 1 1 1 1 1 1 1 1 1 1 ...</code></pre>
+<p>We totally have 45211 observations, 15 input variables and 1 output variables (y).</p>
+<pre class="r"><code>head(dat, 3)</code></pre>
+<pre><code>##            job marital education balance age housing loan contact day
+## 1   management married  tertiary    2143  58       Y    N unknown   5
+## 2   technician  single secondary      29  44       Y    N unknown   5
+## 3 entrepreneur married secondary       2  33       Y    Y unknown   5
+##   month duration campaign pdays previous poutcome y
+## 1   may      261        1    -1        0  unknown N
+## 2   may      151        1    -1        0  unknown N
+## 3   may       76        1    -1        0  unknown N</code></pre>
 <hr />
-</div>
-<div id="a.-introduction-1" class="section level3">
-<h3><strong>A. Introduction</strong></h3>
-<div id="this-data-is-provided-a-portuguese-banking-institution-which-conducted-a-marketing-campaigns-to-promote-their-product.-our-goal-is-to-predict-if-the-client-will-subscribe-a-term-deposit-variable-y.-we-will-run-several-models-including-neural-network-random-search-gbm-ensemble-random-forest-gbm-and-logistic-regression-models.-we-hope-to-know" class="section level4">
-<h4>This data is provided a Portuguese banking institution which conducted a marketing campaigns to promote their product. Our goal is to predict if the client will subscribe a term deposit (variable y). We will run several models including neural network, random search (GBM), ensemble, random forest, GBM and logistic regression models. We hope to know:</h4>
+<div id="b.-apply-models" class="section level3">
+<h3>B. Apply models</h3>
 <ul>
-<li>The trade off between training time and accuracy.</li>
-<li>Will feature selection increases the accuracy?</li>
+<li>Using Neural Networks</li>
+<li>Using random search (GBM algorithm)</li>
+<li>Using ensemble</li>
+<li>Using Logistic Regression</li>
+<li>Using random forest</li>
+<li>Using GBM model</li>
 </ul>
-</div>
-<div id="the-general-steps-are" class="section level4">
-<h4>The general steps are</h4>
-<ul>
-<li>Manipulate our data set (data wrangling &amp; graphs)</li>
-<li>Apply different models to the clean data set (with all features)</li>
-<li>Make prediction and view the accuracy and ROC curve</li>
-<li>Do feature selection (variable importance)</li>
-<li>Rebuild models based on limited features</li>
-<li>Make prediction, AUC and ROC curve (with limited features)</li>
-</ul>
-</div>
-<div id="in-order-to-let-readers-view-the-explicit-results-i-would-only-include-6-models-in-this-report.-that-is-regarding-to-neural-network-models-only-the-model-with-highest-auc-will-be-included-in-this-report.-please-refer-to-the-other-file-__-if-you-want-to-view-the-whole-results-of-totally-26-models." class="section level4">
-<h4>In order to let readers view the explicit results, I would only include 6 models in this report. That is, regarding to neural network models, only the model with highest AUC will be included in this report. Please refer to the other file __ if you want to view the whole results of totally 26 models.</h4>
 <hr />
-</div>
-</div>
-<div id="b.-brief-summarization-1" class="section level3">
-<h3><strong>B. Brief Summarization</strong></h3>
-<div id="here-are-some-pros-and-cons-that-i-saw-from-the-textbook-and-quora" class="section level5">
-<h5>Here are some pros and cons that I saw from the textbook and Quora</h5>
-<table>
-<thead>
-<tr class="header">
-<th>Random Forest Model</th>
-<th></th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td><strong>Pros</strong></td>
-<td></td>
-</tr>
-<tr class="even">
-<td>1. Fast to train our training data</td>
-</tr>
-<tr class="odd">
-<td>2. High accuracy</td>
-</tr>
-<tr class="even">
-<td>3. Automatically Generalized our data within the process</td>
-</tr>
-<tr class="odd">
-<td><strong>Cons</strong></td>
-<td></td>
-</tr>
-<tr class="even">
-<td>1. Inconsistent - because it’s classification method</td>
-</tr>
-<tr class="odd">
-<td>2. Hard to interpret the results</td>
-</tr>
-<tr class="even">
-<td>3. Slow to predict our testing data</td>
-</tr>
-<tr class="odd">
-<td>4. Need high computability, which may be expensive</td>
-</tr>
-</tbody>
-</table>
-<hr />
-</div>
-</div>
-<div id="c.-take-a-look-of-our-data-1" class="section level3">
-<h3><strong>C. Take a Look of Our Data</strong></h3>
-<div id="we-totally-have-45211-observations-15-input-variables-and-1-output-variables-y.-the-description-of-features-are-list-as-following" class="section level5">
-<h5>We totally have 45211 observations, 15 input variables and 1 output variables (y). The description of features are list as following:</h5>
-<table style="width:92%;">
-<colgroup>
-<col width="6%"></col>
-<col width="16%"></col>
-<col width="68%"></col>
-</colgroup>
-<thead>
-<tr class="header">
-<th>Feature</th>
-<th>Type</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td>job</td>
-<td>Categorical</td>
-<td>Type of job, categorical: ‘admin.’,‘blue-collar’,‘entrepreneur’,etc…</td>
-</tr>
-<tr class="even">
-<td>marital</td>
-<td>Categorical</td>
-<td>Marital status, categorical: ‘divorced’,‘married’,‘single’,‘unknown’; note: ‘divorced’ means divorced or widowed</td>
-</tr>
-<tr class="odd">
-<td>education</td>
-<td>Categorical</td>
-<td>“unknown”,“secondary”,“primary”,“tertiary”</td>
-</tr>
-<tr class="even">
-<td>balance</td>
-<td>Numeric</td>
-<td>Average yearly balance, in euros</td>
-</tr>
-<tr class="odd">
-<td>age</td>
-<td>Numeric</td>
-<td>age</td>
-</tr>
-<tr class="even">
-<td>housing</td>
-<td>Binary</td>
-<td>Has housing loan? (binary: “Y”,“N”)</td>
-</tr>
-<tr class="odd">
-<td>loan</td>
-<td>Binary</td>
-<td>Has personal loan? (binary: “Y”,“N”)</td>
-</tr>
-<tr class="even">
-<td>contact</td>
-<td>Categorical</td>
-<td>Contact communication type, categorical: “unknown”,“telephone”,“cellular”</td>
-</tr>
-<tr class="odd">
-<td>day</td>
-<td>Numeric</td>
-<td>Last contact day of the month</td>
-</tr>
-<tr class="even">
-<td>month</td>
-<td>Categorical</td>
-<td>Last contact month of year, categorical: “jan”, “feb”, “mar”, …, “nov”, “dec”</td>
-</tr>
-<tr class="odd">
-<td>duration</td>
-<td>Numeric</td>
-<td>Last contact duration, in seconds</td>
-</tr>
-<tr class="even">
-<td>campaign</td>
-<td>Numeric</td>
-<td>Number of contacts performed during this campaign and for this client</td>
-</tr>
-<tr class="odd">
-<td>pdays</td>
-<td>Numeric</td>
-<td>Number of days that passed by after the client was last contacted from a previous campaign</td>
-</tr>
-<tr class="even">
-<td>previous</td>
-<td>Numeric</td>
-<td>Number of contacts performed before this campaign and for this client</td>
-</tr>
-<tr class="odd">
-<td>poutcome</td>
-<td>Categorical</td>
-<td>Outcome of the previous marketing campaign, categorical: “unknown”,“other”,“failure”,“success”</td>
-</tr>
-<tr class="even">
-<td><strong>y (output)</strong></td>
-<td>Binary</td>
-<td>Has the client subscribed a term deposit? (binary: “Y”,“N”)</td>
-</tr>
-</tbody>
-</table>
-</div>
-<div id="neural-network" class="section level4">
-<h4><strong>1. Neural Network</strong></h4>
-<pre class="r"><code>#Split data sets: train, validation and test
-dx &lt;- h2o.importFile(&quot;test.csv&quot;)
-dx_split &lt;- h2o.splitFrame(dx, ratios = c(0.6,0.2), seed = 123)
+<div id="ensemble" class="section level5">
+<h5>1. Ensemble</h5>
+<p>Step1: Initiate h2o package</p>
+<pre class="r"><code>library(h2o)</code></pre>
+<pre class="r"><code>h2o.no_progress()</code></pre>
+<pre class="r"><code>h2o.init(nthreads=-1)</code></pre>
+<pre><code>## 
+## H2O is not running yet, starting it now...
+## 
+## Note:  In case of errors look at the following log files:
+##     C:\Users\Eve\AppData\Local\Temp\Rtmpsbhz90/h2o_Eve_started_from_r.out
+##     C:\Users\Eve\AppData\Local\Temp\Rtmpsbhz90/h2o_Eve_started_from_r.err
+## 
+## 
+## Starting H2O JVM and connecting: . Connection successful!
+## 
+## R is connected to the H2O cluster: 
+##     H2O cluster uptime:         3 seconds 183 milliseconds 
+##     H2O cluster version:        3.10.4.6 
+##     H2O cluster version age:    1 month and 8 days  
+##     H2O cluster name:           H2O_started_from_R_Eve_skc091 
+##     H2O cluster total nodes:    1 
+##     H2O cluster total memory:   3.48 GB 
+##     H2O cluster total cores:    4 
+##     H2O cluster allowed cores:  4 
+##     H2O cluster healthy:        TRUE 
+##     H2O Connection ip:          localhost 
+##     H2O Connection port:        54321 
+##     H2O Connection proxy:       NA 
+##     H2O Internal Security:      FALSE 
+##     R Version:                  R version 3.4.0 (2017-04-21)</code></pre>
+<p>Step2: Load data &amp; split it into dx_train, dx_valid and dx_test data sets</p>
+<pre class="r"><code>dx &lt;- h2o.importFile(&quot;test.csv&quot;)
+dx_split &lt;- h2o.splitFrame(dx, ratios = 0.7, seed = 123)
 dx_train &lt;- dx_split[[1]]
-dx_valid &lt;- dx_split[[2]]
-dx_test &lt;- dx_split[[3]]
+dx_test &lt;- dx_split[[2]]
 Xnames &lt;- setdiff(names(dx_train),&quot;y&quot;)</code></pre>
-<pre class="r"><code>#Neural Network Model (the Best, highest AUC)
-system.time({
-  md_nn &lt;- h2o.deeplearning(x = Xnames, y = &quot;y&quot;, training_frame = dx_train, validation_frame = dx_valid,
-            activation = &quot;Rectifier&quot;, hidden = c(50,50), 
-            adaptive_rate = FALSE, rate = 0.01, rate_annealing = 1e-04, 
-            momentum_start = 0.5, momentum_ramp = 1e5, momentum_stable = 0.99,
-            epochs = 100, stopping_rounds = 2, stopping_metric = &quot;AUC&quot;, stopping_tolerance = 0) 
+</div>
+<div id="step2-create-several-models-rf-gbm-nn-ensemble" class="section level4">
+<h4>Step2: Create several models (rf + gbm + NN = Ensemble)</h4>
+<div id="random-forest" class="section level5">
+<h5>Random Forest</h5>
+<pre class="r"><code>system.time({
+  md_rf &lt;- h2o.randomForest(x = Xnames, y = &quot;y&quot;, training_frame = dx_train, 
+                          ntrees = 300,
+                          seed = 123,
+                          nfolds = 5, fold_assignment = &quot;Modulo&quot;, keep_cross_validation_predictions = TRUE)
 })</code></pre>
 <pre><code>##    user  system elapsed 
-##    0.53    0.03   37.08</code></pre>
-<pre class="r"><code>#AUC
-h2o.performance(md_nn, dx_test)@metrics$AUC</code></pre>
-<pre><code>## [1] 0.9228427</code></pre>
+##    1.10    0.07  205.34</code></pre>
+<hr />
+</div>
+<div id="gbm" class="section level5">
+<h5>GBM</h5>
+<pre class="r"><code>system.time({
+  md_gbm &lt;- h2o.gbm(x = Xnames, y = &quot;y&quot;, training_frame = dx_train, distribution = &quot;bernoulli&quot;, 
+                 ntrees = 200, max_depth = 10, learn_rate = 0.1, 
+                 nbins = 100, seed = 123,
+                 nfolds = 5, fold_assignment = &quot;Modulo&quot;, keep_cross_validation_predictions = TRUE)    
+})</code></pre>
+<pre><code>##    user  system elapsed 
+##    0.69    0.05   95.68</code></pre>
+<hr />
+</div>
+<div id="neural-network" class="section level5">
+<h5>Neural Network</h5>
+<pre class="r"><code>system.time({
+  md_nn &lt;- h2o.deeplearning(x = Xnames, y = &quot;y&quot;, training_frame = dx_train,
+                         activation = &quot;Rectifier&quot;, hidden = c(100,100), 
+                         adaptive_rate = FALSE, rate = 0.01, rate_annealing = 1e-04,momentum_start = 0.5, momentum_ramp = 1e5, momentum_stable = 0.99, epochs = 100, seed = 123, nfolds = 5, fold_assignment = &quot;Modulo&quot;, keep_cross_validation_predictions = TRUE)
+  })</code></pre>
+<pre><code>##    user  system elapsed 
+##    0.88    0.02  551.85</code></pre>
+<hr />
+</div>
+<div id="ensemble-1" class="section level5">
+<h5>Ensemble</h5>
+<pre class="r"><code>system.time({
+md_ensemble &lt;- h2o.stackedEnsemble(x = Xnames, y = &quot;y&quot;, training_frame = dx_train, 
+                              base_models = list(md_rf@model_id, md_gbm@model_id, md_nn@model_id))
+})</code></pre>
+<pre><code>##    user  system elapsed 
+##    0.18    0.00    5.10</code></pre>
+<hr />
+</div>
+<div id="check-all-the-aucs" class="section level5">
+<h5>Check all the AUCs</h5>
+<pre class="r"><code>h2o.auc(h2o.performance(md_rf, dx_test))</code></pre>
+<pre><code>## [1] 0.9336292</code></pre>
+<pre class="r"><code>h2o.auc(h2o.performance(md_gbm, dx_test))</code></pre>
+<pre><code>## [1] 0.929539</code></pre>
+<pre class="r"><code>h2o.auc(h2o.performance(md_nn, dx_test))</code></pre>
+<pre><code>## [1] 0.9273867</code></pre>
+<pre class="r"><code>h2o.auc(h2o.performance(md_ensemble, dx_test))</code></pre>
+<pre><code>## [1] 0.9339975</code></pre>
+</div>
+<div id="auc-of-ensemble" class="section level5">
+<h5>AUC of ensemble</h5>
+<pre class="r"><code>auc_ensemble &lt;- h2o.getModel(md_ensemble@model$metalearner$name)@model$coefficients_table
+auc_ensemble</code></pre>
+<pre><code>## Coefficients: glm coefficients
+##                                    names coefficients
+## 1                              Intercept    -3.776229
+## 2            DRF_model_R_1496620943611_1     7.467160
+## 3          GBM_model_R_1496620943611_250     0.000000
+## 4 DeepLearning_model_R_1496620943611_507     0.342405
+##   standardized_coefficients
+## 1                 -2.851129
+## 2                  1.456581
+## 3                  0.000000
+## 4                  0.062717</code></pre>
 </div>
 </div>
 </div>

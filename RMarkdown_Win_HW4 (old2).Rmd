@@ -50,7 +50,7 @@ setwd("C:/Users/Eve/Dropbox/UCLA Files/Courses/418 Tools of Data Science/STATS 4
 
 
 #####Here are some pros and cons that I saw from the textbook and Quora
-Models | AUC | Processing time (Sec)          
+Random Forest Model |          
 ----|-----------------------------------------------------------
 **Pros**|
     | 1. Fast to train our training data
@@ -171,7 +171,7 @@ h2o.performance(md_nn, dx_test)@metrics$AUC
 
 
 ####**4. GBM**
-```{r, include=FALSE}
+```{r}
 #Use different data set
 dnovalid <- h2o.importFile("test.csv")
 dnovalid_split <- h2o.splitFrame(dnovalid, ratios = 0.7, seed = 123)
@@ -180,15 +180,15 @@ dnovalid_test <- dnovalid_split[[2]]
 Xnames_novalid <- setdiff(names(dnovalid_train),"y")
 ```
 
+
+***
+
+
 ```{r}
 #GBM model
 system.time({
   md_gbm <- h2o.gbm(x = Xnames_novalid, y = "y", training_frame = dnovalid_train, distribution = "bernoulli", ntrees = 200, max_depth = 10, learn_rate = 0.1, nbins = 100, seed = 123, nfolds = 5, fold_assignment = "Modulo", keep_cross_validation_predictions = TRUE)    
 })
-```
-
-```{r}
-h2o.auc(h2o.performance(md_gbm, dnovalid_test))
 ```
 
 ***

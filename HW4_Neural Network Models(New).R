@@ -14,7 +14,28 @@ dx_test <- dx_split[[3]]
 
 Xnames <- names(dx_train)[which(names(dx_train)!="y")]
 
+#Only test for NN which was built within Ensemble example
+###Data set - New
+den <- h2o.importFile("test.csv")
+den_split <- h2o.splitFrame(den, ratios = 0.7, seed = 123)
+den_train <- den_split[[1]]
+den_test <- den_split[[2]]
+Xnamesen <- setdiff(names(den_train),"y")
 
+###New model - built within Ensemble example
+system.time({
+  md_nn <- h2o.deeplearning(x = Xnamesen, y = "y", training_frame = den_train,
+                            activation = "Rectifier", hidden = c(100,100), 
+                            adaptive_rate = FALSE, rate = 0.01, 
+                            rate_annealing = 1e-04,momentum_start = 0.5, 
+                            momentum_ramp = 1e5, momentum_stable = 0.99, 
+                            epochs = 100, seed = 123, nfolds = 5, 
+                            fold_assignment = "Modulo")
+})
+h2o.performance(md_nn, den_test)@metrics$AUC
+
+
+#Back to the original Neural Network models
 
 system.time({
   md <- h2o.deeplearning(x = Xnames, y = "y", training_frame = dx_train, validation_frame = dx_valid, epochs = 100, stopping_rounds = 2, hidden = c(100,100), stopping_metric = "AUC", stopping_tolerance = 0) 

@@ -4,8 +4,66 @@ author: "Yuan Yi Chen (Eve)"
 date: "2017年6月4日"
 output: html_document
 ---
+#**Agenda**
 
-Step1: Setup
+```{r, include = F}
+setwd("C:/Users/Eve/Dropbox/UCLA Files/Courses/418 Tools of Data Science/STATS 418 - HW4")
+```
+#**Agenda**
+
+###**A. Introduction**
+###**B. Brief Summarization**
+###**C. Take a Look of Our Data**
+###**D. Statistical Models**
+###**E. Models, AUC and ROC**
+  + #####All Features Included
+  + #####Limited Features Included
+
+###**F. Conclusion**
+
+  
+
+***
+
+###**A. Introduction**
+
+####This data is provided a Portuguese banking institution which conducted a marketing campaigns to promote their product. Our goal is to predict if the client will subscribe a term deposit (variable y). We will run several models including neural network, random search (GBM), ensemble, random forest, GBM and logistic regression models. We hope to know:
+  * The trade off between training time and accuracy.
+  * Will feature selection increases the accuracy?
+
+
+####The general steps are
+  * Manipulate our data set (data wrangling & graphs)
+  * Apply different models to the clean data set (with all features)
+  * Make prediction and view the accuracy and ROC curve
+  * Do feature selection (variable importance)
+  * Rebuild models based on limited features
+  * Make prediction, AUC and ROC curve (with limited features)
+
+####In order to let readers view the explicit results, I would only include 6 models in this report. That is, regarding to neural network models, only the model with highest AUC will be included in this report. Please refer to the other file __ if you want to view the whole results of totally 26 models.
+
+***
+
+###**B. Brief Summarization** 
+
+
+#####Here are some pros and cons that I saw from the textbook and Quora
+Random Forest Model |          
+----|-----------------------------------------------------------
+**Pros**|
+    | 1. Fast to train our training data
+    | 2. High accuracy
+    | 3. Automatically Generalized our data within the process
+**Cons**| 
+    | 1. Inconsistent - because it's classification method
+    | 2. Hard to interpret the results
+    | 3. Slow to predict our testing data
+    | 4. Need high computability, which may be expensive
+    
+***
+
+###**C. Take a Look of Our Data**
+
 ```{r, include = F}
 #Remove Objects
 rm(list=ls())
@@ -13,12 +71,10 @@ rm(list=ls())
 #Clear Memory
 gc(reset=TRUE)
 
-#Set Working Directory
+#diR
 setwd("C:/Users/Eve/Dropbox/UCLA Files/Courses/418 Tools of Data Science/STATS 418 - HW4")
-```
 
-Step2: Load Packages
-```{r, message = F}
+#Packages
 library(readr)   #Use to read data
 library(glmnet)  #Use to apply logistic regression
 library(ROCR)    #Use to calcuate AUC
@@ -26,316 +82,60 @@ library(h2o)     #Use to run logistic regression and random forest
 library(xgboost) #Use to run random forest model
 ```
 
-Step3: Load data set
-This **bank marketing** data set is provided by a Portuguese banking institution. It takes records on every phone calls they make to promote their product - term deposit. Our goal is to predict if a customer will subsribe a product after they make phone calls.
+#####We totally have 45211 observations, 15 input variables and 1 output variables (y). The description of features are list as following:
 
-```{r}
-dat <- read.csv("test.csv")
-str(dat)
-```
+Feature |  Type | Description        
+----|-----------|------------------------------------------------
+job|Categorical |Type of job, categorical: 'admin.','blue-collar','entrepreneur',etc...
+marital| Categorical |Marital status, categorical: 'divorced','married','single','unknown'; note: 'divorced' means divorced or widowed
+education| Categorical | "unknown","secondary","primary","tertiary"
+balance| Numeric | Average yearly balance, in euros 
+age| Numeric | age
+housing| Binary |Has housing loan? (binary: "Y","N")
+loan| Binary | Has personal loan? (binary: "Y","N")
+contact| Categorical | Contact communication type, categorical: "unknown","telephone","cellular"
+day| Numeric |Last contact day of the month
+month | Categorical |Last contact month of year, categorical: "jan", "feb", "mar", ..., "nov", "dec"
+duration |Numeric |Last contact duration, in seconds
+campaign |Numeric |Number of contacts performed during this campaign and for this client
+pdays |Numeric |Number of days that passed by after the client was last contacted from a previous campaign
+previous |Numeric |Number of contacts performed before this campaign and for this client
+poutcome|Categorical |Outcome of the previous marketing campaign, categorical: "unknown","other","failure","success"
+**y (output)** |Binary |Has the client subscribed a term deposit? (binary: "Y","N")
 
-We totally have 45211 observations, 15 input variables and 1 output variables (y).
-
-```{r}
-head(dat, 3)
-```
-
-
-
-***
-
-###B. Apply models
-  * Using Neural Networks
-  * Using random search (GBM algorithm)
-  * Using ensemble
-  * Using Logistic Regression
-  * Using random forest
-  * Using GBM model
-
-***
-
-#####1. Using Neural Networks
-  * Layers (100, 100) with early stopping
-  * More layers (100, 100, 100, 100) with early stopping
-  * 
-
-#####(a.) Layers (100, 100) with early stopping
-
-Step1: Initiate h2o package
-```{r, message = F}
+####**1. Neural Network**
+```{r, include = F}
 library(h2o)
 ```
-```{r}
+```{r, include = F}
 h2o.no_progress()
 ```
 
-```{r, message = F}
+```{r, include = F}
 h2o.init(nthreads=-1)
 ```
 
-Step2: Load data & split it into dx_train, dx_valid and dx_test data sets
 ```{r}
+#Split data sets: train, validation and test
 dx <- h2o.importFile("test.csv")
 dx_split <- h2o.splitFrame(dx, ratios = c(0.6,0.2), seed = 123)
 dx_train <- dx_split[[1]]
 dx_valid <- dx_split[[2]]
 dx_test <- dx_split[[3]]
+Xnames <- setdiff(names(dx_train),"y")
 ```
-
-####1-1. Using Neural network with different hyperparameters
-
-####Step1: split our data set 
-```{r, message = F}
-dx <- h2o.importFile("test.csv")
-dx_split <- h2o.splitFrame(dx, ratios = c(0.6,0.2), seed = 123)
-dx_train <- dx_split[[1]]
-dx_valid <- dx_split[[2]]
-dx_test <- dx_split[[3]]
-Xnames <- names(dx_train)[which(names(dx_train)!="y")]
-```
-
-####Step2: Create several models (All Neural Network models)
 
 ```{r}
+#Neural Network Model (the Best, highest AUC)
 system.time({
-  md <- h2o.deeplearning(x = Xnames, y = "y", training_frame = dx_train, validation_frame = dx_valid, epochs = 100, stopping_rounds = 2, hidden = c(100,100), stopping_metric = "AUC", stopping_tolerance = 0) 
-})
-h2o.performance(md, dx_test)@metrics$AUC
-```
-
-***
-
-```{r}
-system.time({
-  md <- h2o.deeplearning(x = Xnames, y = "y", training_frame = dx_train, validation_frame = dx_valid,
-            activation = "Rectifier", hidden = c(50,50,50,50), input_dropout_ratio = 0.2,
-            epochs = 100, stopping_rounds = 2, stopping_metric = "AUC", stopping_tolerance = 0) 
-})
-h2o.performance(md, dx_test)@metrics$AUC
-```
-
-***
-
-```{r}
-system.time({
-  md <- h2o.deeplearning(x = Xnames, y = "y", training_frame = dx_train, validation_frame = dx_valid,
-            activation = "Rectifier", hidden = c(50,50,50,50), 
-            epochs = 100, stopping_rounds = 2, stopping_metric = "AUC", stopping_tolerance = 0) 
-})
-h2o.performance(md, dx_test)@metrics$AUC
-```
-
-***
-
-```{r}
-system.time({
-  md <- h2o.deeplearning(x = Xnames, y = "y", training_frame = dx_train, validation_frame = dx_valid,
-            activation = "Rectifier", hidden = c(20,20),
-            epochs = 100, stopping_rounds = 2, stopping_metric = "AUC", stopping_tolerance = 0) 
-})
-h2o.performance(md, dx_test)@metrics$AUC
-```
-
-***
-
-```{r}
-system.time({
-  md <- h2o.deeplearning(x = Xnames, y = "y", training_frame = dx_train, validation_frame = dx_valid,
-            activation = "Rectifier", hidden = c(20),
-            epochs = 100, stopping_rounds = 2, stopping_metric = "AUC", stopping_tolerance = 0) 
-})
-h2o.performance(md, dx_test)@metrics$AUC
-```
-
-***
-
-```{r}
-system.time({
-  md <- h2o.deeplearning(x = Xnames, y = "y", training_frame = dx_train, validation_frame = dx_valid,
-            activation = "Rectifier", hidden = c(5),
-            epochs = 100, stopping_rounds = 2, stopping_metric = "AUC", stopping_tolerance = 0) 
-})
-h2o.performance(md, dx_test)@metrics$AUC
-```
-
-***
-
-```{r}
-system.time({
-  md <- h2o.deeplearning(x = Xnames, y = "y", training_frame = dx_train, validation_frame = dx_valid,
-            activation = "Rectifier", hidden = c(1),
-            epochs = 100, stopping_rounds = 2, stopping_metric = "AUC", stopping_tolerance = 0) 
-})
-h2o.performance(md, dx_test)@metrics$AUC
-```
-***
-```{r}
-system.time({
-  md <- h2o.deeplearning(x = Xnames, y = "y", training_frame = dx_train, validation_frame = dx_valid,
-            activation = "Rectifier", hidden = c(100,100), l1 = 1e-5, l2 = 1e-5, 
-            epochs = 100, stopping_rounds = 2, stopping_metric = "AUC", stopping_tolerance = 0) 
-})
-h2o.performance(md, dx_test)@metrics$AUC
-```
-
-***
-
-```{r}
-system.time({
-  md <- h2o.deeplearning(x = Xnames, y = "y", training_frame = dx_train, validation_frame = dx_valid,
-            activation = "RectifierWithDropout", hidden = c(100,100,100,100), hidden_dropout_ratios=c(0.2,0.1,0.1,0),
-            epochs = 100, stopping_rounds = 2, stopping_metric = "AUC", stopping_tolerance = 0) 
-})
-h2o.performance(md, dx_test)@metrics$AUC
-```
-
-***
-
-```{r}
-system.time({
-  md <- h2o.deeplearning(x = Xnames, y = "y", training_frame = dx_train, validation_frame = dx_valid,
-            activation = "Rectifier", hidden = c(100,100), 
-            rho = 0.95, epsilon = 1e-06,  ## default:  rho = 0.99, epsilon = 1e-08
-            epochs = 100, stopping_rounds = 2, stopping_metric = "AUC", stopping_tolerance = 0) 
-})
-h2o.performance(md, dx_test)@metrics$AUC
-```
-
-***
-
-```{r}
-system.time({
-  md <- h2o.deeplearning(x = Xnames, y = "y", training_frame = dx_train, validation_frame = dx_valid,
-            activation = "Rectifier", hidden = c(100,100), 
-            rho = 0.999, epsilon = 1e-08,  ## default:  rho = 0.99, epsilon = 1e-08
-            epochs = 100, stopping_rounds = 2, stopping_metric = "AUC", stopping_tolerance = 0) 
-})
-h2o.performance(md, dx_test)@metrics$AUC
-```
-
-***
-
-```{r}
-system.time({
-  md <- h2o.deeplearning(x = Xnames, y = "y", training_frame = dx_train, validation_frame = dx_valid,
-            activation = "Rectifier", hidden = c(100,100), 
-            rho = 0.9999, epsilon = 1e-08,  ## default:  rho = 0.99, epsilon = 1e-08
-            epochs = 100, stopping_rounds = 2, stopping_metric = "AUC", stopping_tolerance = 0) 
-})
-h2o.performance(md, dx_test)@metrics$AUC
-```
-
-***
-
-```{r}
-system.time({
-  md <- h2o.deeplearning(x = Xnames, y = "y", training_frame = dx_train, validation_frame = dx_valid,
-            activation = "Rectifier", hidden = c(100,100), 
-            rho = 0.999, epsilon = 1e-06,  ## default:  rho = 0.99, epsilon = 1e-08
-            epochs = 100, stopping_rounds = 2, stopping_metric = "AUC", stopping_tolerance = 0) 
-})
-h2o.performance(md, dx_test)@metrics$AUC
-```
-
-***
-
-```{r}
-system.time({
-  md <- h2o.deeplearning(x = Xnames, y = "y", training_frame = dx_train, validation_frame = dx_valid,
-            activation = "Rectifier", hidden = c(100,100), 
-            rho = 0.999, epsilon = 1e-09,  ## default:  rho = 0.99, epsilon = 1e-08
-            epochs = 100, stopping_rounds = 2, stopping_metric = "AUC", stopping_tolerance = 0) 
-})
-h2o.performance(md, dx_test)@metrics$AUC
-```
-
-***
-
-```{r}
-system.time({
-  md <- h2o.deeplearning(x = Xnames, y = "y", training_frame = dx_train, validation_frame = dx_valid,
-            activation = "Rectifier", hidden = c(100,100), 
-            adaptive_rate = FALSE, ## default: rate = 0.005, rate_decay = 1, momentum_stable = 0,
-            epochs = 100, stopping_rounds = 2, stopping_metric = "AUC", stopping_tolerance = 0) 
-})
-h2o.performance(md, dx_test)@metrics$AUC
-```
-
-***
-
-```{r}
-system.time({
-  md <- h2o.deeplearning(x = Xnames, y = "y", training_frame = dx_train, validation_frame = dx_valid,
-            activation = "Rectifier", hidden = c(100,100), 
-            adaptive_rate = FALSE, rate = 0.001, momentum_start = 0.5, momentum_ramp = 1e5, momentum_stable = 0.99,
-            epochs = 100, stopping_rounds = 2, stopping_metric = "AUC", stopping_tolerance = 0) 
-})
-h2o.performance(md, dx_test)@metrics$AUC
-```
-
-***
-
-```{r}
-system.time({
-  md <- h2o.deeplearning(x = Xnames, y = "y", training_frame = dx_train, validation_frame = dx_valid,
-            activation = "Rectifier", hidden = c(100,100), 
-            adaptive_rate = FALSE, rate = 0.01, momentum_start = 0.5, momentum_ramp = 1e5, momentum_stable = 0.99,
-            epochs = 100, stopping_rounds = 2, stopping_metric = "AUC", stopping_tolerance = 0) 
-})
-h2o.performance(md, dx_test)@metrics$AUC
-```
-
-***
-
-```{r}
-system.time({
-  md <- h2o.deeplearning(x = Xnames, y = "y", training_frame = dx_train, validation_frame = dx_valid,
-            activation = "Rectifier", hidden = c(100,100), 
-            adaptive_rate = FALSE, rate = 0.01, rate_annealing = 1e-05, 
-            momentum_start = 0.5, momentum_ramp = 1e5, momentum_stable = 0.99,
-            epochs = 100, stopping_rounds = 2, stopping_metric = "AUC", stopping_tolerance = 0) 
-})
-h2o.performance(md, dx_test)@metrics$AUC
-```
-
-***
-
-```{r}
-system.time({
-  md <- h2o.deeplearning(x = Xnames, y = "y", training_frame = dx_train, validation_frame = dx_valid,
-            activation = "Rectifier", hidden = c(100,100), 
+  md_nn <- h2o.deeplearning(x = Xnames, y = "y", training_frame = dx_train, validation_frame = dx_valid,
+            activation = "Rectifier", hidden = c(50,50), 
             adaptive_rate = FALSE, rate = 0.01, rate_annealing = 1e-04, 
             momentum_start = 0.5, momentum_ramp = 1e5, momentum_stable = 0.99,
             epochs = 100, stopping_rounds = 2, stopping_metric = "AUC", stopping_tolerance = 0) 
 })
-h2o.performance(md, dx_test)@metrics$AUC
 ```
-
-***
-
 ```{r}
-system.time({
-  md <- h2o.deeplearning(x = Xnames, y = "y", training_frame = dx_train, validation_frame = dx_valid,
-            activation = "Rectifier", hidden = c(100,100), 
-            adaptive_rate = FALSE, rate = 0.01, rate_annealing = 1e-05, 
-            momentum_start = 0.5, momentum_ramp = 1e5, momentum_stable = 0.9,
-            epochs = 100, stopping_rounds = 2, stopping_metric = "AUC", stopping_tolerance = 0) 
-})
-h2o.performance(md, dx_test)@metrics$AUC
+#AUC
+h2o.performance(md_nn, dx_test)@metrics$AUC
 ```
-
-***
-
-```{r}
-system.time({
-  md <- h2o.deeplearning(x = Xnames, y = "y", training_frame = dx_train, validation_frame = dx_valid,
-            activation = "Rectifier", hidden = c(100,100), 
-            adaptive_rate = FALSE, rate = 0.01, rate_annealing = 1e-05, 
-            momentum_start = 0.5, momentum_ramp = 1e4, momentum_stable = 0.9,
-            epochs = 100, stopping_rounds = 2, stopping_metric = "AUC", stopping_tolerance = 0) 
-})
-h2o.performance(md, dx_test)@metrics$AUC
-```
-
-
-
