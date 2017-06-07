@@ -125,15 +125,19 @@ $(document).ready(function () {
 
 <div id="e.-models-auc-and-rocall-features-included" class="section level3">
 <h3><strong>E. Models, AUC and ROC(All Features Included)</strong></h3>
-<div id="random-forest-do-feature-selection" class="section level4">
-<h4><strong>5. Random Forest (Do feature selection)</strong></h4>
+<div id="logistic-regression" class="section level4">
+<h4><strong>6. Logistic Regression</strong></h4>
 <pre class="r"><code>system.time({
-  md_rf &lt;- h2o.randomForest(x = Xnames, y = &quot;y&quot;, training_frame = dx_train, ntrees = 100, seed = 123, nfolds = 5, fold_assignment = &quot;Modulo&quot;, keep_cross_validation_predictions = TRUE)
+  md_logistic &lt;- h2o.glm(x = Xnames_novalid, y = &quot;y&quot;, training_frame = dnovalid_train, 
+                family = &quot;binomial&quot;, 
+                alpha = 1, lambda = 0,
+                seed = 123,
+                nfolds = 5, fold_assignment = &quot;Modulo&quot;, keep_cross_validation_predictions = TRUE)
 })</code></pre>
 <pre><code>##    user  system elapsed 
-##    0.50    0.02   51.16</code></pre>
-<pre class="r"><code>h2o.auc(h2o.performance(md_rf, dx_test))</code></pre>
-<pre><code>## [1] 0.9287946</code></pre>
+##    0.33    0.00    1.62</code></pre>
+<pre class="r"><code>h2o.auc(h2o.performance(md_logistic, dnovalid_test))</code></pre>
+<pre><code>## [1] 0.9068904</code></pre>
 </div>
 </div>
 

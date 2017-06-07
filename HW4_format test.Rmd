@@ -10,7 +10,7 @@ setwd("C:/Users/Eve/Dropbox/UCLA Files/Courses/418 Tools of Data Science/STATS 4
 ```
 
 ###**E. Models, AUC and ROC(All Features Included)**
-####**5. Random Forest (Do feature selection)**
+####**6. Logistic Regression**
 
 ```{r, include = F}
 #Remove Objects
@@ -42,22 +42,26 @@ h2o.no_progress()
 h2o.init(nthreads=-1)
 ```
 
+
 ```{r, include=FALSE}
-#Split data sets: train, validation and test
-dx <- h2o.importFile("test.csv")
-dx_split <- h2o.splitFrame(dx, ratios = c(0.6,0.2), seed = 123)
-dx_train <- dx_split[[1]]
-dx_valid <- dx_split[[2]]
-dx_test <- dx_split[[3]]
-Xnames <- setdiff(names(dx_train),"y")
+#Use different data set
+dnovalid <- h2o.importFile("test.csv")
+dnovalid_split <- h2o.splitFrame(dnovalid, ratios = 0.7, seed = 123)
+dnovalid_train <- dnovalid_split[[1]]
+dnovalid_test <- dnovalid_split[[2]]
+Xnames_novalid <- setdiff(names(dnovalid_train),"y")
 ```
 
 
 ```{r}
 system.time({
-  md_rf <- h2o.randomForest(x = Xnames, y = "y", training_frame = dx_train, ntrees = 100, seed = 123, nfolds = 5, fold_assignment = "Modulo", keep_cross_validation_predictions = TRUE)
+  md_logistic <- h2o.glm(x = Xnames_novalid, y = "y", training_frame = dnovalid_train, 
+                family = "binomial", 
+                alpha = 1, lambda = 0,
+                seed = 123,
+                nfolds = 5, fold_assignment = "Modulo", keep_cross_validation_predictions = TRUE)
 })
 ```
 ```{r}
-h2o.auc(h2o.performance(md_rf, dx_test))
+h2o.auc(h2o.performance(md_logistic, dnovalid_test))
 ```
