@@ -48,8 +48,7 @@ ggplot(data=data_job, aes(x=job, y=n))+
   theme_bw()+ coord_flip() + 
   xlab("Different Types of Jobs") + ylab("Numbers of Subscriptions")
 
-
-data_day = subscribe %>%
-  group_by(day) %>%
+data_previous = subscribe %>%
+  group_by(previous) %>%
   summarise(n = n())
 

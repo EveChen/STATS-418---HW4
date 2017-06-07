@@ -1,41 +1,28 @@
 setwd("C:/Users/Eve/Dropbox/UCLA Files/Courses/418 Tools of Data Science/STATS 418 - HW4")
 dir()
-####**1. Neural Network**
-```{r, include = F}
+
 library(h2o)
-```
-```{r, include = F}
-h2o.no_progress()
-```
 
-```{r, include = F}
 h2o.init(nthreads=-1)
-```
 
-```{r}
-#Split data sets: train, validation and test
+#Data sets with validation
 dx <- h2o.importFile("test.csv")
 dx_split <- h2o.splitFrame(dx, ratios = c(0.6,0.2), seed = 123)
 dx_train <- dx_split[[1]]
 dx_valid <- dx_split[[2]]
 dx_test <- dx_split[[3]]
 Xnames <- setdiff(names(dx_train),"y")
-```
 
-```{r}
-#Neural Network Model (the Best, highest AUC)
 system.time({
-  md_nn <- h2o.deeplearning(x = Xnames, y = "y", training_frame = dx_train, validation_frame = dx_valid,
-                            activation = "Rectifier", hidden = c(50,50), 
-                            adaptive_rate = FALSE, rate = 0.01, rate_annealing = 1e-04, 
-                            momentum_start = 0.5, momentum_ramp = 1e5, momentum_stable = 0.99,
-                            epochs = 100, stopping_rounds = 2, stopping_metric = "AUC", stopping_tolerance = 0) 
+  md_logistic <- h2o.glm(x = Xnames, y = "y", training_frame = dx_train, 
+                         family = "binomial", 
+                         alpha = 1, lambda = 0,
+                         seed = 123,
+                         nfolds = 5, fold_assignment = "Modulo", keep_cross_validation_predictions = TRUE)
 })
-```
-```{r}
-#AUC
-h2o.performance(md_nn, dx_test)@metrics$AUC
-```
+
+
+h2o.auc(h2o.performance(md_logistic, dx_test))
 
 #Q: Cannot draw ROC curve
 #Try ROCR to make ROC curve with True/False Positive
