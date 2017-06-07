@@ -50,18 +50,15 @@ setwd("C:/Users/Eve/Dropbox/UCLA Files/Courses/418 Tools of Data Science/STATS 4
 
 
 #####Here are some pros and cons that I saw from the textbook and Quora
-Models | AUC | Processing time (Sec)          
-----|-----------------------------------------------------------
-**Pros**|
-    | 1. Fast to train our training data
-    | 2. High accuracy
-    | 3. Automatically Generalized our data within the process
-**Cons**| 
-    | 1. Inconsistent - because it's classification method
-    | 2. Hard to interpret the results
-    | 3. Slow to predict our testing data
-    | 4. Need high computability, which may be expensive
-    
+Models | AUC | Processing time (Sec)        
+----|--------------------------------------------------------
+**Neural Network**| 0.9228427 | 37.08
+**Random Search(GBM)**|       |
+**Ensemble**| 0.9228427 | 37.08
+**GBM**| 0.9228427 | 37.08
+**Random Forest**| 0.9228427 | 37.08
+**Logistic Regression**| 0.9228427 | 37.08
+
 ***
 
 ###**C. Take a Look of Our Data**

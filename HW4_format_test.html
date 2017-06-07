@@ -125,9 +125,6 @@ $(document).ready(function () {
 
 <div id="agenda" class="section level1">
 <h1><strong>Agenda</strong></h1>
-</div>
-<div id="agenda-1" class="section level1">
-<h1><strong>Agenda</strong></h1>
 <div id="a.-introduction" class="section level3">
 <h3><strong>A. Introduction</strong></h3>
 </div>
@@ -325,26 +322,17 @@ $(document).ready(function () {
 </div>
 <div id="neural-network" class="section level4">
 <h4><strong>1. Neural Network</strong></h4>
-<pre class="r"><code>#Split data sets: train, validation and test
-dx &lt;- h2o.importFile(&quot;test.csv&quot;)
-dx_split &lt;- h2o.splitFrame(dx, ratios = c(0.6,0.2), seed = 123)
-dx_train &lt;- dx_split[[1]]
-dx_valid &lt;- dx_split[[2]]
-dx_test &lt;- dx_split[[3]]
-Xnames &lt;- setdiff(names(dx_train),&quot;y&quot;)</code></pre>
-<pre class="r"><code>#Neural Network Model (the Best, highest AUC)
+</div>
+<div id="gbm" class="section level4">
+<h4><strong>4. GBM</strong></h4>
+<pre class="r"><code>#GBM model
 system.time({
-  md_nn &lt;- h2o.deeplearning(x = Xnames, y = &quot;y&quot;, training_frame = dx_train, validation_frame = dx_valid,
-            activation = &quot;Rectifier&quot;, hidden = c(50,50), 
-            adaptive_rate = FALSE, rate = 0.01, rate_annealing = 1e-04, 
-            momentum_start = 0.5, momentum_ramp = 1e5, momentum_stable = 0.99,
-            epochs = 100, stopping_rounds = 2, stopping_metric = &quot;AUC&quot;, stopping_tolerance = 0) 
+  md_gbm &lt;- h2o.gbm(x = Xnames_novalid, y = &quot;y&quot;, training_frame = dnovalid_train, distribution = &quot;bernoulli&quot;, ntrees = 200, max_depth = 10, learn_rate = 0.1, nbins = 100, seed = 123, nfolds = 5, fold_assignment = &quot;Modulo&quot;, keep_cross_validation_predictions = TRUE)    
 })</code></pre>
 <pre><code>##    user  system elapsed 
-##    0.53    0.03   37.08</code></pre>
-<pre class="r"><code>#AUC
-h2o.performance(md_nn, dx_test)@metrics$AUC</code></pre>
-<pre><code>## [1] 0.9228427</code></pre>
+##    0.98    0.01  104.08</code></pre>
+<pre class="r"><code>h2o.auc(h2o.performance(md_gbm, dnovalid_test))</code></pre>
+<pre><code>## [1] 0.929539</code></pre>
 </div>
 </div>
 </div>
