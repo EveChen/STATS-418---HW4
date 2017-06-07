@@ -30,3 +30,26 @@ ggplot(data=data_job, aes(x=job, y=n))+
   geom_bar(stat = "identity", aes(fill = job))+ 
   theme_bw()+ coord_flip() + 
   xlab("Different Types of Jobs") + ylab("Numbers of Subscriptions")
+
+colnames(data)
+
+attach(mtcars)
+par(mfrow=c(1,2))
+subscribe <- data[which(data$y == "Y"),]
+nrow(data)
+nrow(subscribe)
+
+data_job = subscribe %>%
+  group_by(job) %>%
+  summarise(n = n())
+
+ggplot(data=data_job, aes(x=job, y=n))+
+  geom_bar(stat = "identity", aes(fill = job))+ 
+  theme_bw()+ coord_flip() + 
+  xlab("Different Types of Jobs") + ylab("Numbers of Subscriptions")
+
+
+data_day = subscribe %>%
+  group_by(day) %>%
+  summarise(n = n())
+

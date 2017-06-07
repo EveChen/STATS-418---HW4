@@ -71,6 +71,19 @@ ggplot(data=data_education, aes(x=education, y=n))+
   xlab("Different Education Background") + ylab("Numbers of Subscriptions") + ggtitle("Education v.s. Subscription")
 ```
 
+```{r, include=FALSE}
+#####balance vs subscription
+data_balance = subscribe %>%
+  group_by(balance) %>%
+  summarise(n = n())
+```
+```{r, echo = FALSE}
+#balance v.s. Subscription
+ggplot(data=data_balance, aes(x=balance, y=n))+
+  geom_bar(stat = "identity", aes(fill = balance))+ 
+  theme_bw()+ coord_flip() + 
+  xlab("Different balance") + ylab("Numbers of Subscriptions") + ggtitle("Balance v.s. Subscription")
+```
 
 
 ```{r, include=FALSE}
@@ -144,7 +157,7 @@ data_day = subscribe %>%
 ggplot(data=data_day, aes(x=day, y=n))+
   geom_bar(stat = "identity", aes(fill = day))+ 
   theme_bw()+ coord_flip() + 
-  xlab("Days") + ylab("Numbers of Subscriptions") + ggtitle("Days v.s. Subscription")
+  xlab("Day") + ylab("Numbers of Subscriptions") + ggtitle("Day v.s. Subscription")
 ```
 
 
@@ -196,6 +209,36 @@ ggplot(data=data_campaign, aes(x=campaign, y=n))+
 ```
 
 
+
+```{r, include=FALSE}
+#####pdays vs subscription
+data_pdays = subscribe %>%
+  group_by(pdays) %>%
+  summarise(n = n())
+```
+```{r, echo = FALSE}
+#pdays v.s. Subscription
+ggplot(data=data_pdays, aes(x=pdays, y=n))+
+  geom_bar(stat = "identity", aes(fill = pdays))+ 
+  theme_bw()+ coord_flip() + 
+  xlab("Pdays") + ylab("Numbers of Subscriptions") + ggtitle("Pdays v.s. Subscription")
+```
+
+
+
+```{r, include=FALSE}
+#####previous vs subscription
+data_previous = subscribe %>%
+  group_by(previous) %>%
+  summarise(n = n())
+```
+```{r, echo = FALSE}
+#previous v.s. Subscription
+ggplot(data=data_previous, aes(x=previous, y=n))+
+  geom_bar(stat = "identity", aes(fill = previous))+ 
+  theme_bw()+ coord_flip() + 
+  xlab("Previous") + ylab("Numbers of Subscriptions") + ggtitle("Previous v.s. Subscription")
+```
 
 
 

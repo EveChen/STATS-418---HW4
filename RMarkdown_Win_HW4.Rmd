@@ -16,8 +16,9 @@ setwd("C:/Users/Eve/Dropbox/UCLA Files/Courses/418 Tools of Data Science/STATS 4
 ###**A. Introduction**
 ###**B. Brief Summarization**
 ###**C. Take a Look of Our Data**
-###**D. Models, AUC and ROC**
-###**E. Conclusion**
+###**D. Visualization of Our Data**
+###**E. Models**
+###**F. Conclusion**
 
   
 
@@ -83,6 +84,7 @@ library(ROCR)    #Use to calcuate AUC
 library(h2o)     #Use to run logistic regression and random forest 
 library(xgboost) #Use to run random forest model
 library(ggplot2) #Use to draw plots
+library(dplyr)
 ```
 
 #####We totally have 45211 observations, 15 input variables and 1 output variables (y). The description of features are list as following:
@@ -107,21 +109,222 @@ previous |Numeric |Number of contacts performed before this campaign and for thi
 poutcome|Categorical |Outcome of the previous marketing campaign, categorical: "unknown","other","failure","success"
 **y (output)** |Binary |Has the client subscribed a term deposit? (binary: "Y","N")
 
-
-```{r, include = F}
-data <- read.csv("test.csv")
-```
-
-
-```{r}
+#####This is our data set
+```{r, echo = F}
 head(data, 3)
 ```
 
+###**D. Visualization of Our Data***
+#####Make several plots to have brief understanding about our data set
+Features | People who tend to subscribe the product
+---------|-----------------------------------------
+Job | Work in management field
+Martial | Married people
+Education | People who has secondary degree
+Age | People whose age is between 20 to 40 years old
+Housing | People who has no house
+Loan | People who don't have the loan
+Contact | Contact communication type is Cellular
+Day | People tend to subscribe the product on 30th
+Month | People tend to subscribe the product on May
+Campaign | 1 contact performed during this campaign and for this client
+Previous | People who haven't been contacted before this campaign
+Poutcome | Outcome of the previous marketing is "Success"
+
+***
+
+```{r, include = F}
+#Original data set
+data <- read.csv("test.csv")
+#Subscription data set (consumers did subscribe the product)
+subscribe <- data[which(data$y == "Y"),]
+```
+
+```{r, include=FALSE}
+#####Job vs subscription
+data_job = subscribe %>%
+  group_by(job) %>%
+  summarise(n = n())
+```
+```{r, echo = FALSE}
+ggplot(data=data_job, aes(x=job, y=n))+
+  geom_bar(stat = "identity", aes(fill = job))+ 
+  theme_bw()+ coord_flip() + 
+  xlab("Different Types of Jobs") + ylab("Numbers of Subscriptions") + ggtitle("Job v.s. Subscription")
+```
+
+```{r, include=FALSE}
+#####marital vs subscription
+data_marital = subscribe %>%
+  group_by(marital) %>%
+  summarise(n = n())
+```
+```{r, echo = FALSE}
+#marital v.s. Subscription
+ggplot(data=data_marital, aes(x=marital, y=n))+
+  geom_bar(stat = "identity", aes(fill = marital))+ 
+  theme_bw()+ coord_flip() + 
+  xlab("Different Marital Status") + ylab("Numbers of Subscriptions") + ggtitle("Marital v.s. Subscription")
+```
+
+
+```{r, include=FALSE}
+#####education vs subscription
+data_education = subscribe %>%
+  group_by(education) %>%
+  summarise(n = n())
+```
+```{r, echo = FALSE}
+#education v.s. Subscription
+ggplot(data=data_education, aes(x=education, y=n))+
+  geom_bar(stat = "identity", aes(fill = education))+ 
+  theme_bw()+ coord_flip() + 
+  xlab("Different Education Background") + ylab("Numbers of Subscriptions") + ggtitle("Education v.s. Subscription")
+```
+
+
+
+```{r, include=FALSE}
+#####age vs subscription
+data_age = subscribe %>%
+  group_by(age) %>%
+  summarise(n = n())
+```
+```{r, echo = FALSE}
+#age v.s. Subscription
+ggplot(data=data_age, aes(x=age, y=n))+
+  geom_bar(stat = "identity", aes(fill = age))+ 
+  theme_bw()+ coord_flip() + 
+  xlab("Different age") + ylab("Numbers of Subscriptions") + ggtitle("Age v.s. Subscription")
+```
+
+```{r, include=FALSE}
+#####housing vs subscription
+data_housing = subscribe %>%
+  group_by(housing) %>%
+  summarise(n = n())
+```
+```{r, echo = FALSE}
+#housing v.s. Subscription
+ggplot(data=data_housing, aes(x=housing, y=n))+
+  geom_bar(stat = "identity", aes(fill = housing))+ 
+  theme_bw()+ coord_flip() + 
+  xlab("Housing") + ylab("Numbers of Subscriptions") + ggtitle("Housing v.s. Subscription")
+```
+
+
+```{r, include=FALSE}
+#####loan vs subscription
+data_loan = subscribe %>%
+  group_by(loan) %>%
+  summarise(n = n())
+```
+```{r, echo = FALSE}
+#balance v.s. Subscription
+ggplot(data=data_loan, aes(x=loan, y=n))+
+  geom_bar(stat = "identity", aes(fill = loan))+ 
+  theme_bw()+ coord_flip() + 
+  xlab("Loan") + ylab("Numbers of Subscriptions") + ggtitle("Loan v.s. Subscription")
+```
+
+
+
+```{r, include=FALSE}
+#####contact vs subscription
+data_contact = subscribe %>%
+  group_by(contact) %>%
+  summarise(n = n())
+```
+```{r, echo = FALSE}
+#contact v.s. Subscription
+ggplot(data=data_contact, aes(x=contact, y=n))+
+  geom_bar(stat = "identity", aes(fill = contact))+ 
+  theme_bw()+ coord_flip() + 
+  xlab("Different contact") + ylab("Numbers of Subscriptions") + ggtitle("Contact v.s. Subscription")
+```
+
+
+```{r, include=FALSE}
+#####day vs subscription
+data_day = subscribe %>%
+  group_by(day) %>%
+  summarise(n = n())
+```
+```{r, echo = FALSE}
+#balance v.s. Subscription
+ggplot(data=data_day, aes(x=day, y=n))+
+  geom_bar(stat = "identity", aes(fill = day))+ 
+  theme_bw()+ coord_flip() + 
+  xlab("Days") + ylab("Numbers of Subscriptions") + ggtitle("Days v.s. Subscription")
+```
+
+
+
+```{r, include=FALSE}
+#####month vs subscription
+data_month = subscribe %>%
+  group_by(month) %>%
+  summarise(n = n())
+```
+```{r, echo = FALSE}
+#month v.s. Subscription
+ggplot(data=data_month, aes(x=month, y=n))+
+  geom_bar(stat = "identity", aes(fill = month))+ 
+  theme_bw()+ coord_flip() + 
+  xlab("Different Month") + ylab("Numbers of Subscriptions") + ggtitle("Month v.s. Subscription")
+```
+
+
+
+```{r, include=FALSE}
+#####duration vs subscription
+data_duration = subscribe %>%
+  group_by(duration) %>%
+  summarise(n = n())
+```
+```{r, echo = FALSE}
+#duration v.s. Subscription
+ggplot(data=data_duration, aes(x=duration, y=n))+
+  geom_bar(stat = "identity", aes(fill = duration))+ 
+  theme_bw()+ coord_flip() + 
+  xlab("Different duration") + ylab("Numbers of Subscriptions") + ggtitle("Duration v.s. Subscription")
+```
+
+
+
+```{r, include=FALSE}
+#####campaign vs subscription
+data_campaign = subscribe %>%
+  group_by(campaign) %>%
+  summarise(n = n())
+```
+```{r, echo = FALSE}
+#campaign v.s. Subscription
+ggplot(data=data_campaign, aes(x=campaign, y=n))+
+  geom_bar(stat = "identity", aes(fill = campaign))+ 
+  theme_bw()+ coord_flip() + 
+  xlab("Numbers of Campaign") + ylab("Numbers of Subscriptions") + ggtitle("Campaign v.s. Subscription")
+```
 
 
 
 
-###**D. Models, AUC and ROC**
+```{r, include=FALSE}
+#####poutcome vs subscription
+data_poutcome = subscribe %>%
+  group_by(poutcome) %>%
+  summarise(n = n())
+```
+```{r, echo = FALSE}
+#poutcome v.s. Subscription
+ggplot(data=data_poutcome, aes(x=poutcome, y=n))+
+  geom_bar(stat = "identity", aes(fill = poutcome))+ 
+  theme_bw()+ coord_flip() + 
+  xlab("Different Poutcome") + ylab("Numbers of Subscriptions") + ggtitle("Poutcome v.s. Subscription")
+```
+
+
+###**E. Models, AUC and ROC**
 
 ```{r, include = F}
 library(h2o)
@@ -150,7 +353,7 @@ Xnames <- setdiff(names(dx_train),"y")
 
 ```{r}
 system.time({
-  md_gbm <- h2o.gbm(x = Xnames, y = "y", training_frame = dx_train, distribution = "bernoulli", ntrees = 200, max_depth = 10, learn_rate = 0.1, nbins = 100, seed = 123, nfolds = 5, fold_assignment = "Modulo", keep_cross_validation_predictions = TRUE)    
+  md_gbm <- h2o.gbm(x = Xnames, y = "y", training_frame = dx_train, distribution = "bernoulli", ntrees = 50, max_depth = 10, learn_rate = 0.1, nbins = 100, seed = 123, nfolds = 5, fold_assignment = "Modulo", keep_cross_validation_predictions = TRUE)    
 })
 ```
 
@@ -164,7 +367,7 @@ h2o.auc(h2o.performance(md_gbm, dx_test))
 ####**2. Random Forest**
 ```{r}
 system.time({
-  md_rf <- h2o.randomForest(x = Xnames, y = "y", training_frame = dx_train, ntrees = 300, seed = 123, nfolds = 5, fold_assignment = "Modulo", keep_cross_validation_predictions = TRUE)
+  md_rf <- h2o.randomForest(x = Xnames, y = "y", training_frame = dx_train, ntrees = 50, seed = 123, nfolds = 5, fold_assignment = "Modulo", keep_cross_validation_predictions = TRUE)
 })
 ```
 
@@ -285,32 +488,14 @@ auc_rs
 
 
 
+
 ***
 
-###**E. Conclusion**
-#####I still insist my opinion that we should use logistic regression in this case. If the bank really wants to pursue high accuracy, then random forest model can be applied in this case (but the bank should have suitable computational resources).
+###**F. Conclusion**
+#####After applying around 25 models with the same data, the main conclusion is that we may use random forest model in this case. Although the AUC of random forest model is not higher than random search (GBM) or ensemble models, its processing time is shorter than both random search and ensemble models. 
 
-#####In sum, 
+#####On the other hand, random forest model will not cause overfitting even if we increase the amount of trees. Furthermore, we can even use varImpPlot function to see the importance of each feature, which may benefit our feature selection process.
 
-Packages         | AUC   | Processing Time (/sec) 
------------------|-------|------------------
-h2o-rf (100 trees) | 0.9314315 | 9.22
-h2o-rf (200 trees) | 0.9316806 | 14.76
-h2o-rf (300 trees) | 0.9319108 | 18.99
-XGBoost-rf (100 trees) | 0.9018877 | 2.28
-XGBoost-rf (200 trees) | 0.8982503 | 4.68
-XGBoost-rf (300 trees) | 0.9042339 | 6.95
-randomForest (100 trees) | Error rate = 9.23% | 4.61
-randomForest (200 trees) | Error rate = 9.15% | 8.78
-randomForest (300 trees) | Error rate = 9.08% | 11.95
-glmnet-glm (w/ lasso)|0.9037  | 0.23
-glmnet-glm (w/o lasso)| 0.875|0.18
-h2o-glm (w/lasso)    |0.9041  |1.51
-h2o-glm (w/o lasso)  |0.8687  |0.52
-
-* ####We can see once we increase the amount of trees, in most cases, the accuracy may go up. However, it may take a bit longer time to train the models.
-* ####If we control our method to random forest, we can clearly see the XGBoost package can efficiently train our model (although it's accuracy is worse that other two packages)
-* ####If we compare different methods with different packages, we can also see that, in general, random forest model performs better accuracy than logistic model.  
 
 
 
