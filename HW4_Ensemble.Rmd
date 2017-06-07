@@ -5,7 +5,10 @@ date: "2017年6月4日"
 output: html_document
 ---
 
-Step1: Setup
+```{r, include = F}
+setwd("C:/Users/Eve/Dropbox/UCLA Files/Courses/418 Tools of Data Science/STATS 418 - HW4")
+```
+
 ```{r, include = F}
 #Remove Objects
 rm(list=ls())
@@ -13,23 +16,22 @@ rm(list=ls())
 #Clear Memory
 gc(reset=TRUE)
 
-#Set Working Directory
+#diR
 setwd("C:/Users/Eve/Dropbox/UCLA Files/Courses/418 Tools of Data Science/STATS 418 - HW4")
-```
 
-Step2: Load Packages
-```{r, message = F}
+#Packages
 library(readr)   #Use to read data
 library(glmnet)  #Use to apply logistic regression
 library(ROCR)    #Use to calcuate AUC
 library(h2o)     #Use to run logistic regression and random forest 
 library(xgboost) #Use to run random forest model
+library(randomForest)
 ```
 
 
-***
+###**E. Models**
 
-####**E-3. Ensemble (random forest, GBM and neural network)**
+####**5. Ensemble (random forest, GBM and neural network)**
 
 ```{r, include = F}
 library(h2o)
@@ -42,9 +44,8 @@ h2o.no_progress()
 h2o.init(nthreads=-1)
 ```
 
-#####Step1: Load data & split it into dx_train, dx_valid and dx_test data sets
 
-```{r}
+```{r, include=FALSE}
 dx <- h2o.importFile("test.csv")
 dx_split <- h2o.splitFrame(dx, ratios = 0.7, seed = 123)
 dx_train <- dx_split[[1]]
@@ -101,15 +102,4 @@ h2o.auc(h2o.performance(md_ensemble, dx_test))
 #####Coefficients of ensemble
 ```{r}
 h2o.getModel(md_ensemble@model$metalearner$name)@model$coefficients_table
-```
-
-#####ROC of ensemble
-```{r, include = F}
-library(pROC)
-```
-```{r}
-phat <- predict(md_ensemble, newx = dx_test, type = "response")
-ROC_curve = roc(dx_test$y, phat)
-ROC_curve
-plot(ROC_curve)
 ```

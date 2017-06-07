@@ -138,6 +138,14 @@ dx_test <- dx_split[[3]]
 Xnames <- setdiff(names(dx_train),"y")
 ```
 
+```{r, include=FALSE}
+#Data set without validation
+dnovalid <- h2o.importFile("test.csv")
+dnovalid_split <- h2o.splitFrame(dnovalid, ratios = 0.7, seed = 123)
+dnovalid_train <- dnovalid_split[[1]]
+dnovalid_test <- dnovalid_split[[2]]
+Xnames_novalid <- setdiff(names(dnovalid_train),"y")
+```
 
 
 ####**1. GBM**
@@ -145,12 +153,12 @@ Xnames <- setdiff(names(dx_train),"y")
 ```{r}
 #GBM model
 system.time({
-  md_gbm <- h2o.gbm(x = Xnames, y = "y", training_frame = dx_train, distribution = "bernoulli", ntrees = 200, max_depth = 10, learn_rate = 0.1, nbins = 100, seed = 123, nfolds = 5, fold_assignment = "Modulo", keep_cross_validation_predictions = TRUE)    
+  md_gbm <- h2o.gbm(x = Xnames_novalid, y = "y", training_frame = dnovalid_train, distribution = "bernoulli", ntrees = 200, max_depth = 10, learn_rate = 0.1, nbins = 100, seed = 123, nfolds = 5, fold_assignment = "Modulo", keep_cross_validation_predictions = TRUE)    
 })
 ```
 
 ```{r}
-h2o.auc(h2o.performance(md_gbm, dx_test))
+h2o.auc(h2o.performance(md_gbm, dnovalid_test))
 ```
 
 ***
@@ -171,7 +179,7 @@ h2o.auc(h2o.performance(md_rf, dx_test))
 ####**3. Logistic Regression**
 ```{r}
 system.time({
-  md_logistic <- h2o.glm(x = Xnames, y = "y", training_frame = dx_train, 
+  md_logistic <- h2o.glm(x = Xnames_novalid, y = "y", training_frame = dnovalid_train, 
                 family = "binomial", 
                 alpha = 1, lambda = 0,
                 seed = 123,
@@ -179,7 +187,7 @@ system.time({
 })
 ```
 ```{r}
-h2o.auc(h2o.performance(md_logistic, dx_test))
+h2o.auc(h2o.performance(md_logistic, dnovalid_test))
 ```
 
 ####**4. Neural Network Model**
@@ -201,21 +209,7 @@ h2o.performance(md_nn, dx_test)@metrics$AUC
 ***
 
 ####**5. Ensemble (random forest, GBM and neural network)**
-```{r}
-system.time({
-md_ensemble <- h2o.stackedEnsemble(x = Xnames, y = "y", training_frame = dx_train,base_models = list(md_logistic@model_id, md_rf@model_id, md_gbm@model_id, md_nn@model_id))
-})
-```
 
-Check the AUC of Ensemble model
-```{r}
-h2o.auc(h2o.performance(md_ensemble, dx_test))
-```
-
-Coefficients of ensemble
-```{r}
-h2o.getModel(md_ensemble@model$metalearner$name)@model$coefficients_table
-```
 ####**6. Random Search (GBM)**
 
 
