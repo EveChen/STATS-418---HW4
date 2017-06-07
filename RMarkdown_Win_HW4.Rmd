@@ -55,7 +55,7 @@ Models | AUC | Processing time (Sec)
 **Neural Network**| 0.9228427 | 37.08
 **Random Search(GBM)**|       |
 **Ensemble**| 0.9228427 | 37.08
-**GBM**| 0.9228427 | 37.08
+**GBM**| 0.929539 | 104.08
 **Random Forest**| 0.9228427 | 37.08
 **Logistic Regression**| 0.9228427 | 37.08
 
@@ -191,7 +191,7 @@ h2o.auc(h2o.performance(md_gbm, dnovalid_test))
 ***
 
 
-####**5. Random Forest (Do features selection)**
+####**5. Random Forest**
 ```{r}
 system.time({
   md_rf <- h2o.randomForest(x = Xnames, y = "y", training_frame = dx_train, ntrees = 100, seed = 123, nfolds = 5, fold_assignment = "Modulo", keep_cross_validation_predictions = TRUE)
