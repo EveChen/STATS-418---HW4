@@ -49,13 +49,13 @@ setwd("C:/Users/Eve/Dropbox/UCLA Files/Courses/418 Tools of Data Science/STATS 4
 #####From the following table, We can clearly see that all the AUCs of models fall between 0.9 and 0.94. This means after we train and validate our data set, the prediction of whether consumers will subscribe a product has a high AUC between 0.9 and 0.94.
 
 Models | AUC | Processing time (Sec)        
-----|---------|----------------------------------------------
-**Neural Network (the best model within all NN models)**| 0.9260857 | 472.45
-**Random Search (with GBM algorithm)**| 0.9243476  |109.78
-**Ensemble (random forest + GBM + NN)**| 0.929771 | 2.57
-**GBM**| 0.9287117 | 31.65
-**Random Forest**| 0.926403 | 29.78
-**Logistic Regression**| 0.9049404 | 2.79
+----|---------|-----------------------------------------------
+**Neural Network (the best model within all NN models)**| 0.9246779 | 467.39
+**Random Search (with GBM algorithm)**| 0.9272052  |86.29
+**Ensemble (random forest + GBM + NN)**| 0.9317667 | 4.05
+**GBM**| 0.9272052 | 86.29
+**Random Forest**| 0.931621 | 160.78
+**Logistic Regression**| 0.9049404 | 2.78
 
 #####In a tradeoff perspective, we can further think about the tradeoff between accuracy(AUC) and the processing time. For example, although the logistic regression has the smallest processing time, its accuracy falls behind other models. Generally speaking, it's not a bad model because perhaps 2~3% AUC difference may not have great impact to our prediction. However, If it's the bioinformatic data, then it's worth to spend lots of time and CPU/GPC to get the model because even 0.01% increases of AUC can benefit the society.
 

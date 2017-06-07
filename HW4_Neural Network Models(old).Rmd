@@ -26,24 +26,65 @@ library(h2o)     #Use to run logistic regression and random forest
 library(xgboost) #Use to run random forest model
 ```
 
+Step3: Load data set
+This **bank marketing** data set is provided by a Portuguese banking institution. It takes records on every phone calls they make to promote their product - term deposit. Our goal is to predict if a customer will subsribe a product after they make phone calls.
 
-#Apply Neural Networks
+```{r}
+dat <- read.csv("test.csv")
+str(dat)
+```
 
-###1. Set up the environment & split data
+We totally have 45211 observations, 15 input variables and 1 output variables (y).
 
-Set up the environment
-```{r, include = F}
+```{r}
+head(dat, 3)
+```
+
+
+
+***
+
+###B. Apply models
+  * Using Neural Networks
+  * Using random search (GBM algorithm)
+  * Using ensemble
+  * Using Logistic Regression
+  * Using random forest
+  * Using GBM model
+
+***
+
+#####1. Using Neural Networks
+  * Layers (100, 100) with early stopping
+  * More layers (100, 100, 100, 100) with early stopping
+  * 
+
+#####(a.) Layers (100, 100) with early stopping
+
+Step1: Initiate h2o package
+```{r, message = F}
 library(h2o)
 ```
-```{r, include = F}
+```{r}
 h2o.no_progress()
 ```
 
-```{r, include = F}
+```{r, message = F}
 h2o.init(nthreads=-1)
 ```
 
-Load data & split it into dx_train, dx_valid and dx_test data sets
+Step2: Load data & split it into dx_train, dx_valid and dx_test data sets
+```{r}
+dx <- h2o.importFile("test.csv")
+dx_split <- h2o.splitFrame(dx, ratios = c(0.6,0.2), seed = 123)
+dx_train <- dx_split[[1]]
+dx_valid <- dx_split[[2]]
+dx_test <- dx_split[[3]]
+```
+
+####1-1. Using Neural network with different hyperparameters
+
+####Step1: split our data set 
 ```{r, message = F}
 dx <- h2o.importFile("test.csv")
 dx_split <- h2o.splitFrame(dx, ratios = c(0.6,0.2), seed = 123)
@@ -53,7 +94,7 @@ dx_test <- dx_split[[3]]
 Xnames <- names(dx_train)[which(names(dx_train)!="y")]
 ```
 
-###2. Train models (21 NN models in total)
+####Step2: Create several models (All Neural Network models)
 
 ```{r}
 system.time({

@@ -1,4 +1,5 @@
 setwd("C:/Users/Eve/Dropbox/UCLA Files/Courses/418 Tools of Data Science/STATS 418 - HW4")
+setwd("/Users/eve/Dropbox/UCLA Files/Courses/418 Tools of Data Science/STATS 418 - HW4")
 dir()
 
 library(h2o)
@@ -14,18 +15,26 @@ dx_test <- dx_split[[3]]
 Xnames <- setdiff(names(dx_train),"y")
 
 system.time({
-  md_logistic <- h2o.glm(x = Xnames, y = "y", training_frame = dx_train, 
-                         family = "binomial", 
-                         alpha = 1, lambda = 0,
-                         seed = 123,
-                         nfolds = 5, fold_assignment = "Modulo", keep_cross_validation_predictions = TRUE)
+  md <- glmnet( X_train, d_train$y, lambda = 0, alpha = 1, family = "binomial")
 })
 
 
-h2o.auc(h2o.performance(md_logistic, dx_test))
-
 #Q: Cannot draw ROC curve
 #Try ROCR to make ROC curve with True/False Positive
+
+#Try3 - 
+library(ROCR)
+phat <- predict(md, dx_test, type = "response")
+pred <- prediction(phat, dx_test$y)
+
+#Try4
+library(pROC)
+phat <- predict(md_logistic, dx_test, type = "response")
+
+rocr_pred <- prediction(phat, dx_test$y)
+?prediction
+one = roc(dx_test$y, phat)
+plot(one)
 
 #Try1 - ROCR
 library(ROCR)
