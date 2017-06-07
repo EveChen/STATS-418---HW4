@@ -1,3 +1,10 @@
+---
+title: "HW4_Format_Word_Test"
+author: "Yuan Yi Chen (Eve)"
+date: "2017年6月7日"
+output: html_document
+---
+```{r, include=FALSE}
 ###1. Setup
 #Remove Objects
 rm(list=ls())
@@ -13,20 +20,24 @@ library(readr)
 library(ROCR)
 library(ggplot2)
 library(dplyr)
-#CSV
+```
+```{r, include = F}
+#Original data set
 data <- read.csv("test.csv")
-summary(data)
-
-#Job vs y
+#Subscription data set (consumers did subscribe the product)
 subscribe <- data[which(data$y == "Y"),]
-nrow(data)
-nrow(subscribe)
+```
 
+
+```{r, include=FALSE}
+#####Job vs subscription
 data_job = subscribe %>%
   group_by(job) %>%
   summarise(n = n())
-
+```
+```{r, echo = FALSE}
 ggplot(data=data_job, aes(x=job, y=n))+
   geom_bar(stat = "identity", aes(fill = job))+ 
   theme_bw()+ coord_flip() + 
-  xlab("Different Types of Jobs") + ylab("Numbers of Subscriptions")
+  xlab("Different Types of Jobs") + ylab("Numbers of Subscriptions") + ggtitle("Job v.s. Subscription")
+```
