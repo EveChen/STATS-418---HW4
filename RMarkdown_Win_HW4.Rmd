@@ -1,7 +1,7 @@
 ---
 title: "STATS 418 Homework 4"
 author: "Yuan Yi Chen (Eve)"
-date: "2017/6/3"
+date: "2017/6/7"
 output:
   html_document: default
   pdf_document: default
@@ -16,9 +16,8 @@ setwd("C:/Users/Eve/Dropbox/UCLA Files/Courses/418 Tools of Data Science/STATS 4
 ###**A. Introduction**
 ###**B. Brief Summarization**
 ###**C. Take a Look of Our Data**
-###**D. Statistical Models**
-###**E. Models, AUC and ROC**
-###**F. Conclusion**
+###**D. Models, AUC and ROC**
+###**E. Conclusion**
 
   
 
@@ -45,16 +44,23 @@ setwd("C:/Users/Eve/Dropbox/UCLA Files/Courses/418 Tools of Data Science/STATS 4
 
 ###**B. Brief Summarization** 
 
+#####From the following table, We can clearly see that all the AUCs of models fall between 0.9 and 0.94. This means after we train and validate our data set, the prediction of whether consumers will subscribe a product has a high AUC between 0.9 and 0.94.
 
-#####Here are some pros and cons that I saw from the textbook and Quora
 Models | AUC | Processing time (Sec)        
-----|--------------------------------------------------------
-**Neural Network**| 0.9228427 | 37.08
-**Random Search(GBM)**|       |
-**Ensemble**| 0.9228427 | 37.08
-**GBM**| 0.929539 | 104.08
-**Random Forest**| 0.9228427 | 37.08
-**Logistic Regression**| 0.9228427 | 37.08
+----|---------|-----------------------------------------------
+**Neural Network (the best model within all NN models)**| 0.9246779 | 467.39
+**Random Search (with GBM algorithm)**| 0.9272052  |86.29
+**Ensemble (random forest + GBM + NN)**| 0.9317667 | 4.05
+**GBM**| 0.9272052 | 86.29
+**Random Forest**| 0.931621 | 160.78
+**Logistic Regression**| 0.9049404 | 2.78
+
+#####In a tradeoff perspective, we can further think about the tradeoff between accuracy(AUC) and the processing time. For example, although the logistic regression has the smallest processing time, its accuracy falls behind other models. Generally speaking, it's not a bad model because perhaps 2~3% AUC difference may not have great impact to our prediction. However, If it's the bioinformatic data, then it's worth to spend lots of time and CPU/GPC to get the model because even 0.01% increases of AUC can benefit the society.
+
+
+#####In sum, it seems to me that I would choose the logistic model because of its short processing time. In the marketing world, timing and the feedback from our customers are the most important things. As an analyst in this bank who co-works with the marketing team, I am more prone to send the results to the marketing team for them to modify their marketing strategy.
+
+#####On the other hand, if this bank pursues the accuracy (AUC), I may use random forest model instead. It's because although the ensemble model increase the AUC for around 0.001, random forest has the shortest processing time. Furthermore, if we have enough computational resources, we can increase the amount of trees to have higher accuracy. This may not cause the overfitting.
 
 ***
 
@@ -76,6 +82,7 @@ library(glmnet)  #Use to apply logistic regression
 library(ROCR)    #Use to calcuate AUC
 library(h2o)     #Use to run logistic regression and random forest 
 library(xgboost) #Use to run random forest model
+library(ggplot2) #Use to draw plots
 ```
 
 #####We totally have 45211 observations, 15 input variables and 1 output variables (y). The description of features are list as following:
@@ -102,20 +109,19 @@ poutcome|Categorical |Outcome of the previous marketing campaign, categorical: "
 
 
 ```{r, include = F}
-dat <- read.csv("test.csv")
+data <- read.csv("test.csv")
 ```
 
 
 ```{r}
-head(dat, 3)
+head(data, 3)
 ```
 
 
 
 
-###**D. Statistical Models**
 
-###**E. Models, AUC and ROC**
+###**D. Models, AUC and ROC**
 
 ```{r, include = F}
 library(h2o)
@@ -143,7 +149,6 @@ Xnames <- setdiff(names(dx_train),"y")
 ####**1. GBM**
 
 ```{r}
-#GBM model
 system.time({
   md_gbm <- h2o.gbm(x = Xnames, y = "y", training_frame = dx_train, distribution = "bernoulli", ntrees = 200, max_depth = 10, learn_rate = 0.1, nbins = 100, seed = 123, nfolds = 5, fold_assignment = "Modulo", keep_cross_validation_predictions = TRUE)    
 })
@@ -159,9 +164,10 @@ h2o.auc(h2o.performance(md_gbm, dx_test))
 ####**2. Random Forest**
 ```{r}
 system.time({
-  md_rf <- h2o.randomForest(x = Xnames, y = "y", training_frame = dx_train, ntrees = 100, seed = 123, nfolds = 5, fold_assignment = "Modulo", keep_cross_validation_predictions = TRUE)
+  md_rf <- h2o.randomForest(x = Xnames, y = "y", training_frame = dx_train, ntrees = 300, seed = 123, nfolds = 5, fold_assignment = "Modulo", keep_cross_validation_predictions = TRUE)
 })
 ```
+
 ```{r}
 h2o.auc(h2o.performance(md_rf, dx_test))
 ```
@@ -185,15 +191,11 @@ h2o.auc(h2o.performance(md_logistic, dx_test))
 ####**4. Neural Network Model**
 
 ```{r}
-#Neural Network Model (the Best, highest AUC)
 system.time({
-  md_nn <- h2o.deeplearning(x = Xnames, y = "y", training_frame = dx_train, validation_frame = dx_valid,
-            activation = "Rectifier", hidden = c(50,50), 
-            adaptive_rate = FALSE, rate = 0.01, rate_annealing = 1e-04, 
-            momentum_start = 0.5, momentum_ramp = 1e5, momentum_stable = 0.99,
-            epochs = 100, stopping_rounds = 2, stopping_metric = "AUC", stopping_tolerance = 0) 
-})
+  md_nn <- h2o.deeplearning(x = Xnames, y = "y", training_frame = dx_train, activation = "Rectifier", hidden = c(100,100),adaptive_rate = FALSE, rate = 0.01, rate_annealing = 1e-04,momentum_start = 0.5, momentum_ramp = 1e5, momentum_stable = 0.99, epochs = 100, seed = 123, nfolds = 5, fold_assignment = "Modulo", keep_cross_validation_predictions = TRUE)
+  })
 ```
+
 ```{r}
 #AUC
 h2o.performance(md_nn, dx_test)@metrics$AUC
@@ -203,7 +205,7 @@ h2o.performance(md_nn, dx_test)@metrics$AUC
 ####**5. Ensemble (random forest, GBM and neural network)**
 ```{r}
 system.time({
-md_ensemble <- h2o.stackedEnsemble(x = Xnames, y = "y", training_frame = dx_train,base_models = list(md_logistic@model_id, md_rf@model_id, md_gbm@model_id, md_nn@model_id))
+md_ensemble <- h2o.stackedEnsemble(x = Xnames, y = "y", training_frame = dx_train,base_models = list(md_rf@model_id, md_gbm@model_id, md_nn@model_id))
 })
 ```
 
@@ -216,161 +218,14 @@ Coefficients of ensemble
 ```{r}
 h2o.getModel(md_ensemble@model$metalearner$name)@model$coefficients_table
 ```
+
 ####**6. Random Search (GBM)**
 
-
-
-
-
-
-
-***
-
-###B. Apply models
-  * Using Neural Networks
-  * Using random search (GBM algorithm)
-  * Using ensemble
-  * Using Logistic Regression
-  * Using random forest
-  * Using GBM model
-
-***
-
-#####1. Using Neural Networks
-  * Layers (100, 100) with early stopping
-  * More layers (100, 100, 100, 100) with early stopping
-  * 
-
-#####(a.) Layers (100, 100) with early stopping
-
-Step1: Initiate h2o package
+Step1: Change Xnames to Xnames_rs because random search uses different function instead of "setdiff"
+*Notes: Originally, Xnames is 
+Xnames <- setdiff(names(dx_train),"y")*
 ```{r, message = F}
-library(h2o)
-```
-```{r}
-h2o.no_progress()
-```
-
-```{r, message = F}
-h2o.init(nthreads=-1)
-```
-
-Step2: Load data & split it into dx_train, dx_valid and dx_test data sets
-```{r}
-dx <- h2o.importFile("test.csv")
-dx_split <- h2o.splitFrame(dx, ratios = c(0.6,0.2), seed = 123)
-dx_train <- dx_split[[1]]
-dx_valid <- dx_split[[2]]
-dx_test <- dx_split[[3]]
-```
-Step3: Build model1
-```{r}
-Xnames <- names(dx_train)[which(names(dx_train)!="y")]
-system.time({
-  md1 <- h2o.deeplearning(x = Xnames, y = "y", training_frame = dx_train, validation_frame = dx_valid,hidden = c(100,100), epochs = 100, stopping_rounds = 2, stopping_metric = "AUC", stopping_tolerance = 0) 
-})
-```
-
-Step4: Make prediction & AUC
-```{r}
-auc1 <- h2o.performance(md1, dx_test)@metrics$AUC
-auc1
-```
-
-#####(b.) Layers (100, 100, 100, 100) with early stopping
-
-Step1: Build model1
-```{r}
-system.time({
-  md2 <- h2o.deeplearning(x = Xnames, y = "y", training_frame = dx_train, validation_frame = dx_valid,
-                         activation = "Rectifier", hidden = c(100,100,100,100), 
-                         epochs = 100, stopping_rounds = 2, stopping_metric = "AUC", stopping_tolerance = 0) 
-})
-```
-
-Step2: Make prediction & AUC
-```{r}
-auc2 <- h2o.performance(md2, dx_test)@metrics$AUC
-auc2
-```
-
-
-#####(c.) Layers (100, 100) with early stopping & dropout rate
-
-Step1: Build model1
-```{r}
-system.time({
-  md3 <- h2o.deeplearning(x = Xnames, y = "y", training_frame = dx_train, validation_frame = dx_valid, activation = "Rectifier", hidden = c(100,100), input_dropout_ratio = 0.2, epochs = 100, stopping_rounds = 2, stopping_metric = "AUC", stopping_tolerance = 0) 
-})
-```
-
-Step2: Make prediction & AUC
-```{r}
-auc3 <- h2o.performance(md3, dx_test)@metrics$AUC
-auc3
-```
-
-#####(d.) Layers (100, 100) with early stopping & l1 & l2
-
-Step1: Build model1
-```{r}
-system.time({
-  md4 <- h2o.deeplearning(x = Xnames, y = "y", training_frame = dx_train, validation_frame = dx_valid, activation = "Rectifier", hidden = c(100,100), l1 = 1e-5, l2 = 1e-5, epochs = 100, stopping_rounds = 2, stopping_metric = "AUC", stopping_tolerance = 0) 
-})
-```
-
-Step2: Make prediction & AUC
-```{r}
-auc4 <- h2o.performance(md4, dx_test)@metrics$AUC
-auc4
-```
-
-#####(e.) Layers (100, 100) with early stopping & rho & epsilon
-
-Step1: Build model1
-```{r}
-system.time({
-  md5 <- h2o.deeplearning(x = Xnames, y = "y", training_frame = dx_train, validation_frame = dx_valid, activation = "Rectifier", hidden = c(100,100), 
-                         rho = 0.95, epsilon = 1e-06, epochs = 100, stopping_rounds = 2, stopping_metric = "AUC", stopping_tolerance = 0) 
-})
-```
-
-Step2: Make prediction & AUC
-```{r}
-auc5 <- h2o.performance(md5, dx_test)@metrics$AUC
-auc5
-```
-
-#####(f.) Layers (100, 100) with early stopping & rate & momentum
-
-Step1: Build model1
-```{r}
-system.time({
-  md6 <- h2o.deeplearning(x = Xnames, y = "y", training_frame = dx_train, validation_frame = dx_valid, activation = "Rectifier", hidden = c(100,100), adaptive_rate = FALSE, rate = 0.01, rate_annealing = 1e-05, momentum_start = 0.5, momentum_ramp = 1e4, momentum_stable = 0.9, epochs = 100, stopping_rounds = 2, stopping_metric = "AUC", stopping_tolerance = 0) 
-})
-```
-
-Step2: Make prediction & AUC
-```{r}
-auc6 <- h2o.performance(md6, dx_test)@metrics$AUC
-auc6 
-```
-
-
-
-
-***
-
-#####2. Random Search (with algorithm "GBM")
-
-Step1: Split data into train, validation and test data sets
-```{r, message = F}
-dx <- h2o.importFile("test.csv")
-dx_split <- h2o.splitFrame(dx, ratios = c(0.6,0.2), seed = 123)
-dx_train <- dx_split[[1]]
-dx_valid <- dx_split[[2]]
-dx_test <- dx_split[[3]]
-Xnames <- names(dx_train)[which(names(dx_train)!="y")]
+Xnames_rs <- names(dx_train)[which(names(dx_train)!="y")]
 ```
 
 Step2: Create list of hyperparameters
@@ -393,15 +248,15 @@ Step3: Create list of search criteria
 ```{r}
 search_criteria <- list( strategy = "RandomDiscrete",
                          max_runtime_secs = 10*3600,
-                         max_models = 100
+                         max_models = 10
 )
 ```
 
 Step4: Apply random search with GBM model 
 ```{r}
 system.time({
-  md7 <- h2o.grid(algorithm = "gbm", grid_id = "grd",
-                  x = Xnames, y = "y", training_frame = dx_train,
+  md_rs <- h2o.grid(algorithm = "gbm", grid_id = "grd",
+                  x = Xnames_rs, y = "y", training_frame = dx_train,
                   validation_frame = dx_valid,
                   hyper_params = hyper_params,
                   search_criteria = search_criteria,
@@ -414,20 +269,19 @@ system.time({
 Step5: Make prediction and calculate AUC
 ```{r}
 #To sort
-md7_sort <- h2o.getGrid(grid_id = "grd", sort_by = "auc", decreasing = TRUE)
-md7_sort
+md_rs <- h2o.getGrid(grid_id = "grd", sort_by = "auc", decreasing = TRUE)
 ```
 
 ```{r}
 #To see the best
-md7_best <- h2o.getModel(md7_sort@model_ids[[1]])
-summary(md7_best)
+md_rs_best <- h2o.getModel(md_rs@model_ids[[1]])
+summary(md_rs_best)
 ```
 
 ```{r}
 #AUC 
-auc7 <- h2o.auc(h2o.performance(md7_best, dx_test))
-auc7
+auc_rs <- h2o.auc(h2o.performance(md_rs_best, dx_test))
+auc_rs
 ```
 
 

@@ -1,5 +1,5 @@
 ---
-title: "Part E. Models - GBM, Random Forest, Logistic Regression, Neural Network"
+title: "Part D. Models : Random Search with GBM Algorithm"
 author: "Yuan Yi Chen (Eve)"
 date: "2017年6月6日"
 output: html_document
@@ -49,16 +49,8 @@ dx_test <- dx_split[[3]]
 Xnames <- setdiff(names(dx_train),"y")
 ```
 
-```{r, include=FALSE}
-#Data set without validation
-dnovalid <- h2o.importFile("test.csv")
-dnovalid_split <- h2o.splitFrame(dnovalid, ratios = 0.7, seed = 123)
-dnovalid_train <- dnovalid_split[[1]]
-dnovalid_test <- dnovalid_split[[2]]
-Xnames_novalid <- setdiff(names(dnovalid_train),"y")
-```
 
-###**E. Models, AUC and ROC**
+###**D. Models**
 
 ```{r, include = F}
 library(h2o)
@@ -82,79 +74,72 @@ Xnames <- setdiff(names(dx_train),"y")
 ```
 
 
+####**6. Random Search (GBM)**
 
-####**1. GBM**
+Step1: Change Xnames to Xnames_rs because random search uses different function instead of "setdiff"
+*Notes: Originally, Xnames is 
+Xnames <- setdiff(names(dx_train),"y")*
+```{r, message = F}
+Xnames_rs <- names(dx_train)[which(names(dx_train)!="y")]
+```
+
+Step2: Create list of hyperparameters
 
 ```{r}
+hyper_params <- list( ntrees = 10000,  ## early stopping
+                      max_depth = 5:15, 
+                      min_rows = c(1,3,10,30,100),
+                      learn_rate = c(0.01,0.03,0.1),  
+                      learn_rate_annealing = c(0.99,0.995,1,1),
+                      sample_rate = c(0.4,0.7,1,1),
+                      col_sample_rate = c(0.7,1,1),
+                      nbins = c(30,100,300),
+                      nbins_cats = c(64,256,1024)
+)
+```
+
+Step3: Create list of search criteria
+
+```{r}
+search_criteria <- list( strategy = "RandomDiscrete",
+                         max_runtime_secs = 10*3600,
+                         max_models = 20
+)
+```
+
+Step4: Apply random search with GBM model 
+```{r}
 system.time({
-  md_gbm <- h2o.gbm(x = Xnames, y = "y", training_frame = dx_train, distribution = "bernoulli", ntrees = 200, max_depth = 10, learn_rate = 0.1, nbins = 100, seed = 123, nfolds = 5, fold_assignment = "Modulo", keep_cross_validation_predictions = TRUE)    
+  md_rs <- h2o.grid(algorithm = "gbm", grid_id = "grd",
+                  x = Xnames_rs, y = "y", training_frame = dx_train,
+                  validation_frame = dx_valid,
+                  hyper_params = hyper_params,
+                  search_criteria = search_criteria,
+                  stopping_metric = "AUC", stopping_tolerance = 1e-3, stopping_rounds = 2,
+                  seed = 123)
 })
 ```
 
+
+Step5: Make prediction and calculate AUC
 ```{r}
-h2o.auc(h2o.performance(md_gbm, dx_test))
-```
-
-***
-
-
-####**2. Random Forest**
-```{r}
-system.time({
-  md_rf <- h2o.randomForest(x = Xnames, y = "y", training_frame = dx_train, ntrees = 300, seed = 123, nfolds = 5, fold_assignment = "Modulo", keep_cross_validation_predictions = TRUE)
-})
+#To sort
+md_rs <- h2o.getGrid(grid_id = "grd", sort_by = "auc", decreasing = TRUE)
+md_rs
 ```
 
 ```{r}
-h2o.auc(h2o.performance(md_rf, dx_test))
-```
-
-***
-
-####**3. Logistic Regression**
-```{r}
-system.time({
-  md_logistic <- h2o.glm(x = Xnames, y = "y", training_frame = dx_train, 
-                family = "binomial", 
-                alpha = 1, lambda = 0,
-                seed = 123,
-                nfolds = 5, fold_assignment = "Modulo", keep_cross_validation_predictions = TRUE)
-})
-```
-```{r}
-h2o.auc(h2o.performance(md_logistic, dx_test))
-```
-
-####**4. Neural Network Model**
-
-```{r}
-system.time({
-  md_nn <- h2o.deeplearning(x = Xnames, y = "y", training_frame = dx_train, activation = "Rectifier", hidden = c(100,100),adaptive_rate = FALSE, rate = 0.01, rate_annealing = 1e-04,momentum_start = 0.5, momentum_ramp = 1e5, momentum_stable = 0.99, epochs = 100, seed = 123, nfolds = 5, fold_assignment = "Modulo", keep_cross_validation_predictions = TRUE)
-  })
+#To see the best
+md_rs_best <- h2o.getModel(md_rs@model_ids[[1]])
+summary(md_rs_best)
 ```
 
 ```{r}
-#AUC
-h2o.performance(md_nn, dx_test)@metrics$AUC
-```
-***
-
-####**5. Ensemble (random forest, GBM and neural network)**
-```{r}
-system.time({
-md_ensemble <- h2o.stackedEnsemble(x = Xnames, y = "y", training_frame = dx_train,base_models = list(md_rf@model_id, md_gbm@model_id, md_nn@model_id))
-})
+#AUC 
+auc_rs <- h2o.auc(h2o.performance(md_rs_best, dx_test))
+auc_rs
 ```
 
-Check the AUC of Ensemble model
-```{r}
-h2o.auc(h2o.performance(md_ensemble, dx_test))
-```
-
-Coefficients of ensemble
-```{r}
-h2o.getModel(md_ensemble@model$metalearner$name)@model$coefficients_table
-```
 
 ####**6. Random Search (GBM)**
 
